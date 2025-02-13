@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Wordle – Verbe Irrégulier</title>
+<style>
+body {
+font-family: sans-serif;
+display: flex;
+flex-direction: column;
+align-items: center;
+margin: 20px;
+background: url('https://i.ibb.co/nNgrtsbb/Wordle-Wallpaper.png');
+}
+h1 {
+margin-bottom: 10px;
+}
+#score-box {
+margin-bottom: 20px;
+font-size: 18px;
+font-weight: bold;
+}
+#board {
+display: flex;
+flex-direction: column;
+gap: 8px;
+margin-bottom: 20px;
+}
+.row {
+display: flex;
+justify-content: center;
+gap: 5px;
+}
+.cell {
+width: 40px;
+height: 40px;
+border: 2px solid #ccc;
+display: flex;
+justify-content: center;
+align-items: center;
+font-size: 24px;
+font-weight: bold;
+text-transform: lowercase;
+background-color: white;
+}
+.correct {
+background-color: #6aaa64;
+color: white;
+border: none;
+}
+.present {
+background-color: #c9b458;
+color: white;
+border: none;
+}
+.absent {
+background-color: #787c7e;
+color: white;
+border: none;
+}
+#input-container {
+margin-bottom: 10px;
+}
+#guess-input {
+font-size: 18px;
+padding: 5px;
+text-transform: lowercase;
+}
+#message {
+font-size: 20px;
+font-weight: bold;
+margin-bottom: 15px;
+min-height: 24px;
+}
+#new-game-button {
+padding: 6px 12px;
+font-size: 16px;
+margin-top: 10px;
+}
+</style>
+</head>
+<body>
+<h1>Wordle – Verbe Irrégulier</h1>
+<div id="score-box">Meilleur série : 0 | Série actuelle : 0</div>
+<div id="board"></div>
+<div id="message"></div>
+<div id="input-container">
+<input type="text" id="guess-input" placeholder="Entrez votre verbe ici" autocomplete="off">
+<button id="submit-button">Valider</button>
+</div>
+<button id="new-game-button" style="display:none;">Nouvelle Partie</button>
+
+<script>
+// Liste des verbes irréguliers
+const verbs = [
+"beat", "became", "began", "bet", "bit", "bled", "broke", "brought",
+"built", "burnt", "bought", "cast", "caught", "chose", "came", "cost",
+"cut", "did", "drew", "dreamt", "drank", "drove", "ate", "fell", "fed",
+"felt", "fought", "found", "flew", "forbade", "forgot", "forgave", "got",
+"gave", "went", "grew", "hung", "had", "heard", "hid", "hit", "held", "hurt",
+"kept", "knew", "learnt", "left", "let", "lost", "made", "meant", "met", "paid",
+"put", "read", "rose", "ran", "said", "saw", "sold", "sent", "shot", "showed",
+"shut", "sang", "sat", "slept", "smelt", "spoke", "spent", "stole", "swam",
+"took", "taught", "tore", "told", "thought", "threw", "understood", "woke",
+"won", "wrote", "was", "were"
+];
+
+const guessLimit = 5; // 5 tentatives autorisées
+let solutionWord = ""; // Le verbe à trouver (choisi aléatoirement)
+let currentRow = 0; // Index de la ligne en cours
+let gameOver = false;
+
+// Gestion du score (série de bonnes réponses)
+let currentStreak = 0;
+let bestStreak = localStorage.getItem("bestStreak") ? parseInt(localStorage.getItem("bestStreak")) : 0;
+
+// Références aux éléments HTML
+const boardElem = document.getElementById("board");
+const guessInput = document.getElementById("guess-input");
+const submitButton = document.getElementById("submit-button");
+const messageElem = document.getElementById("message");
+const scoreBox = document.getElementById("score-box");
+const newGameButton = document.getElementById("new-game-button");
+
+// Initialise la grille en fonction de la longueur du mot solution
+function createBoard() {
+boardElem.innerHTML = "";
+for (let i = 0; i < guessLimit; i++) {
+const row = document.createElement("div");
+row.classList.add("row");
+for (let j = 0; j < solutionWord.length; j++) {
+const cell = document.createElement("div");
+cell.classList.add("cell");
+cell.textContent = "";
+row.appendChild(cell);
+}
+boardElem.appendChild(row);
+}
+}
+
+// Met à jour l'affichage du score
+function updateScoreBox() {
+scoreBox.textContent = "Meilleur série : " + bestStreak + " | Série actuelle : " + currentStreak;
+}
+
+// Choisit un verbe aléatoirement dans la liste
+function chooseSolution() {
+const randIndex = Math.floor(Math.random() * verbs.length);
+return verbs[randIndex];
+}
+
+// Reset l'état du jeu et démarre une nouvelle partie
+function initGame() {
+solutionWord = chooseSolution();
+currentRow = 0;
+gameOver = false;
+messageElem.textContent = "";
+newGameButton.style.display = "none";
+guessInput.disabled = false;
+submitButton.disabled = false;
+guessInput.value = "";
+guessInput.setAttribute("maxlength", solutionWord.length);
+createBoard();
+// Pour information, vous pouvez afficher solutionWord dans la console pour tester
+console.log("Mot à trouver :", solutionWord);
+}
+
+// Fonction d'évaluation de la tentative : renvoie un tableau de "correct" | "present" | "absent"
+function evaluateGuess(guess, solution) {
+const result = Array(guess.length).fill("absent");
+const solutionLetterCount = {};
+
+// Comptabiliser les lettres du mot solution
+for (let i = 0; i < solution.length; i++) {
+const letter = solution[i];
+solutionLetterCount[letter] = (solutionLetterCount[letter] || 0) + 1;
+}
+
+// Première passe : lettres bien placées
+for (let i = 0; i < guess.length; i++) {
+if (guess[i] === solution[i]) {
+result[i] = "correct";
+solutionLetterCount[guess[i]]--;
+}
+}
+
+// Deuxième passe : lettres présentes mais mal placées
+for (let i = 0; i < guess.length; i++) {
+if (result[i] !== "correct" && solutionLetterCount[guess[i]] > 0) {
+result[i] = "present";
+solutionLetterCount[guess[i]]--;
+}
+}
+return result;
+}
+
+// Gérer la soumission d'une tentative
+function handleGuess() {
+if (gameOver) return;
+
+const guess = guessInput.value.trim().toLowerCase();
+if (guess.length !== solutionWord.length) {
+alert("Le mot doit contenir " + solutionWord.length + " lettres.");
+return;
+}
+
+const evaluation = evaluateGuess(guess, solutionWord);
+// Récupère la ligne de la grille correspondant à la tentative actuelle
+const rowElem = boardElem.children[currentRow];
+for (let i = 0; i < evaluation.length; i++) {
+const cell = rowElem.children[i];
+cell.textContent = guess[i];
+cell.classList.add(evaluation[i]); // Ajoute la classe "correct", "present" ou "absent"
+}
+
+// Vérifier si la réponse est correcte
+if (guess === solutionWord) {
+messageElem.textContent = "Bravo ! Vous avez trouvé le verbe.";
+gameOver = true;
+currentStreak++;
+if (currentStreak > bestStreak) {
+bestStreak = currentStreak;
+localStorage.setItem("bestStreak", bestStreak);
+}
+updateScoreBox();
+guessInput.disabled = true;
+submitButton.disabled = true;
+newGameButton.style.display = "inline-block";
+} else {
+currentRow++;
+if (currentRow >= guessLimit) {
+messageElem.textContent = "Perdu ! Le verbe était : " + solutionWord;
+gameOver = true;
+currentStreak = 0;
+updateScoreBox();
+guessInput.disabled = true;
+submitButton.disabled = true;
+newGameButton.style.display = "inline-block";
+} else {
+// Passer à la ligne suivante et vider l'input
+guessInput.value = "";
+guessInput.focus();
+}
+}
+}
+
+// Gestion du clic sur le bouton "Valider" ou sur la touche "Entrée"
+submitButton.addEventListener("click", handleGuess);
+guessInput.addEventListener("keydown", function(e) {
+if (e.key === "Enter") {
+handleGuess();
+}
+});
+
+// Bouton pour démarrer une nouvelle partie
+newGameButton.addEventListener("click", function() {
+initGame();
+});
+
+// Démarrage de la première partie
+updateScoreBox();
+initGame();
+</script>
+</body>
+</html>
