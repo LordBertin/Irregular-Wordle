@@ -1,271 +1,403 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Wordle – Verbe Irrégulier</title>
-<style>
-body {
-font-family: sans-serif;
-display: flex;
-flex-direction: column;
-align-items: center;
-margin: 20px;
-background: url('https://wallpapers.com/images/hd/light-wood-background-v9gsvgo48dhdtn6x.jpg');
-}
-h1 {
-margin-bottom: 10px;
-}
-#score-box {
-margin-bottom: 20px;
-font-size: 18px;
-font-weight: bold;
-}
-#board {
-display: flex;
-flex-direction: column;
-gap: 8px;
-margin-bottom: 20px;
-}
-.row {
-display: flex;
-justify-content: center;
-gap: 5px;
-}
-.cell {
-width: 40px;
-height: 40px;
-border: 2px solid #ccc;
-display: flex;
-justify-content: center;
-align-items: center;
-font-size: 24px;
-font-weight: bold;
-text-transform: lowercase;
-background-color: white;
-}
-.correct {
-background-color: #6aaa64;
-color: white;
-border: none;
-}
-.present {
-background-color: #c9b458;
-color: white;
-border: none;
-}
-.absent {
-background-color: #787c7e;
-color: white;
-border: none;
-}
-#input-container {
-margin-bottom: 10px;
-}
-#guess-input {
-font-size: 18px;
-padding: 5px;
-text-transform: lowercase;
-}
-#message {
-font-size: 20px;
-font-weight: bold;
-margin-bottom: 15px;
-min-height: 24px;
-}
-#new-game-button {
-padding: 6px 12px;
-font-size: 16px;
-margin-top: 10px;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wordle – Verbes Irréguliers</title>
+  <style>
+    /* Styles généraux et responsive */
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 10px;
+      background: url('https://wallpapers.com/images/hd/light-wood-background-v9gsvgo48dhdtn6x.jpg') no-repeat center center fixed;
+      background-size: cover;
+    }
+    h1, h2 {
+      text-align: center;
+      margin: 10px;
+    }
+    #score-box {
+      margin-bottom: 10px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    /* Réduction des marges pour les légendes */
+    .legend {
+      background-color: transparent;
+      text-align: center;
+      margin: 5px;
+      padding: 3px;
+      font-weight: bold;
+    }
+    #board {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 500px;
+    }
+    .row {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+    }
+    .cell {
+      flex: 1;
+      aspect-ratio: 1 / 1;
+      max-width: 40px;
+      border: 2px solid #ccc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      font-weight: bold;
+      text-transform: lowercase;
+      background-color: white;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+    /* Animation flip */
+    .flip {
+      animation: flip 0.6s;
+    }
+    @keyframes flip {
+      0% { transform: rotateX(0deg); }
+      50% { transform: rotateX(90deg); }
+      100% { transform: rotateX(0deg); }
+    }
+    .correct {
+      background-color: #6aaa64;
+      color: white;
+      border: none;
+    }
+    .present {
+      background-color: #c9b458;
+      color: white;
+      border: none;
+    }
+    .absent {
+      background-color: #787c7e;
+      color: white;
+      border: none;
+    }
+    #message {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      min-height: 24px;
+      text-align: center;
+    }
+    #new-game-button {
+      padding: 6px 12px;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    /* Clavier virtuel en disposition AZERTY */
+    #virtual-keyboard {
+      width: 100%;
+      max-width: 500px;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      margin-bottom: 5px;
+    }
+    .key {
+      flex: 1;
+      padding: 10px 5px;
+      background-color: #ddd;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    .key:hover {
+      background-color: #ccc;
+    }
+    .key:active {
+      transform: scale(0.95);
+    }
+    @media (max-width: 600px) {
+      .cell {
+        max-width: 30px;
+        font-size: 18px;
+      }
+      #score-box, #message {
+        font-size: 14px;
+      }
+      .key {
+        padding: 8px 4px;
+        font-size: 14px;
+      }
+    }
+  </style>
 </head>
 <body>
-<h1>Wordle – Verbes Irréguliers</h1>
-<h2>Tu n'as que 5 essais, alors réfléchis bien :</h2>
-<p style="background-color:Chartreuse;"><b>Lettre bien placée</b></p>
-<br><p style="background-color:Khaki;"><b>Lettre mal placée</b></p>
-<br><p style="background-color:LightGray;"><b>Lettre absente</b></p>
-<div id="score-box">Meilleur série : 0 | Série actuelle : 0</div>
-<div id="board"></div>
-<div id="message"></div>
-<div id="input-container">
-<input type="text" id="guess-input" placeholder="Entrez votre verbe ici" autocomplete="off">
-<button id="submit-button">Valider</button>
-</div>
-<button id="new-game-button" style="display:none;">Nouvelle Partie</button>
+  <h1>Wordle – Verbes Irréguliers</h1>
+  <h2>Tu n'as que 5 essais, alors réfléchis bien :</h2>
+  <p class="legend" style="background-color:Chartreuse;"><b>Lettre bien placée</b></p>
+  <p class="legend" style="background-color:Khaki;"><b>Lettre mal placée</b></p>
+  <p class="legend" style="background-color:LightGray;"><b>Lettre absente</b></p>
+  <div id="score-box">Meilleur série : 0 | Série actuelle : 0</div>
+  <div id="board"></div>
+  <div id="message"></div>
+  <!-- Clavier virtuel AZERTY -->
+  <div id="virtual-keyboard">
+    <div class="keyboard-row" id="row1"></div>
+    <div class="keyboard-row" id="row2"></div>
+    <div class="keyboard-row" id="row3"></div>
+  </div>
+  <button id="new-game-button" style="display:none;">Nouvelle Partie</button>
   <footer>
-<img src="https://i.ibb.co/BVQNGxTM/logo-Wordle2.png" alt="logo-Wordle2" border="0">
-</footer>
-<script>
-// Liste des verbes irréguliers
-const verbs = [
-"beat", "became", "began", "bet", "bit", "bled", "broke", "brought",
-"built", "burnt", "bought", "cast", "caught", "chose", "came", "cost",
-"cut", "did", "drew", "dreamt", "drank", "drove", "ate", "fell", "fed",
-"felt", "fought", "found", "flew", "forbade", "forgot", "forgave", "got",
-"gave", "went", "grew", "hung", "had", "heard", "hid", "hit", "held", "hurt",
-"kept", "knew", "learnt", "left", "let", "lost", "made", "meant", "met", "paid",
-"put", "read", "rose", "ran", "said", "saw", "sold", "sent", "shot", "showed",
-"shut", "sang", "sat", "slept", "smelt", "spoke", "spent", "stole", "swam",
-"took", "taught", "tore", "told", "thought", "threw", "understood", "woke",
-"won", "wrote", "was", "were"
-];
+    <img src="https://i.ibb.co/BVQNGxTM/logo-Wordle2.png" alt="logo-Wordle2" border="0" style="max-width: 200px;">
+  </footer>
+  <script>
+    // Liste des verbes irréguliers
+    const verbs = [
+      "beat", "became", "began", "bet", "bit", "bled", "broke", "brought",
+      "built", "burnt", "bought", "cast", "caught", "chose", "came", "cost",
+      "cut", "did", "drew", "dreamt", "drank", "drove", "ate", "fell", "fed",
+      "felt", "fought", "found", "flew", "forbade", "forgot", "forgave", "got",
+      "gave", "went", "grew", "hung", "had", "heard", "hid", "hit", "held", "hurt",
+      "kept", "knew", "learnt", "left", "let", "lost", "made", "meant", "met", "paid",
+      "put", "read", "rose", "ran", "said", "saw", "sold", "sent", "shot", "showed",
+      "shut", "sang", "sat", "slept", "smelt", "spoke", "spent", "stole", "swam",
+      "took", "taught", "tore", "told", "thought", "threw", "understood", "woke",
+      "won", "wrote", "was", "were"
+    ];
 
-const guessLimit = 5; // 5 tentatives autorisées
-let solutionWord = ""; // Le verbe à trouver (choisi aléatoirement)
-let currentRow = 0; // Index de la ligne en cours
-let gameOver = false;
+    const guessLimit = 5; // 5 tentatives autorisées
+    let solutionWord = ""; // Le verbe à trouver (choisi aléatoirement)
+    let currentRow = 0; // Index de la ligne en cours
+    let gameOver = false;
+    let currentGuess = "";
+    let gameStartTime = 0; // Pour mesurer la durée d'une partie
 
-// Gestion du score (série de bonnes réponses)
-let currentStreak = 0;
-let bestStreak = localStorage.getItem("bestStreak") ? parseInt(localStorage.getItem("bestStreak")) : 0;
+    // Pour le score (série de bonnes réponses)
+    let currentStreak = 0;
+    let bestStreak = localStorage.getItem("bestStreak") ? parseInt(localStorage.getItem("bestStreak")) : 0;
 
-// Références aux éléments HTML
-const boardElem = document.getElementById("board");
-const guessInput = document.getElementById("guess-input");
-const submitButton = document.getElementById("submit-button");
-const messageElem = document.getElementById("message");
-const scoreBox = document.getElementById("score-box");
-const newGameButton = document.getElementById("new-game-button");
+    // Références aux éléments HTML
+    const boardElem = document.getElementById("board");
+    const messageElem = document.getElementById("message");
+    const scoreBox = document.getElementById("score-box");
+    const newGameButton = document.getElementById("new-game-button");
 
-// Initialise la grille en fonction de la longueur du mot solution
-function createBoard() {
-boardElem.innerHTML = "";
-for (let i = 0; i < guessLimit; i++) {
-const row = document.createElement("div");
-row.classList.add("row");
-for (let j = 0; j < solutionWord.length; j++) {
-const cell = document.createElement("div");
-cell.classList.add("cell");
-cell.textContent = "";
-row.appendChild(cell);
-}
-boardElem.appendChild(row);
-}
-}
+    // Crée la grille de jeu en fonction de la longueur du mot solution
+    function createBoard() {
+      boardElem.innerHTML = "";
+      for (let i = 0; i < guessLimit; i++) {
+        const row = document.createElement("div");
+        row.classList.add("row");
+        for (let j = 0; j < solutionWord.length; j++) {
+          const cell = document.createElement("div");
+          cell.classList.add("cell");
+          cell.textContent = "";
+          row.appendChild(cell);
+        }
+        boardElem.appendChild(row);
+      }
+    }
 
-// Met à jour l'affichage du score
-function updateScoreBox() {
-scoreBox.textContent = "Meilleur série : " + bestStreak + " | Série actuelle : " + currentStreak;
-}
+    // Met à jour l'affichage du score
+    function updateScoreBox() {
+      scoreBox.textContent = "Meilleur série : " + bestStreak + " | Série actuelle : " + currentStreak;
+    }
 
-// Choisit un verbe aléatoirement dans la liste
-function chooseSolution() {
-const randIndex = Math.floor(Math.random() * verbs.length);
-return verbs[randIndex];
-}
+    // Choisit un verbe aléatoirement dans la liste
+    function chooseSolution() {
+      const randIndex = Math.floor(Math.random() * verbs.length);
+      return verbs[randIndex];
+    }
 
-// Reset l'état du jeu et démarre une nouvelle partie
-function initGame() {
-solutionWord = chooseSolution();
-currentRow = 0;
-gameOver = false;
-messageElem.textContent = "";
-newGameButton.style.display = "none";
-guessInput.disabled = false;
-submitButton.disabled = false;
-guessInput.value = "";
-guessInput.setAttribute("maxlength", solutionWord.length);
-createBoard();
-// Pour information, vous pouvez afficher solutionWord dans la console pour tester
-console.log("Mot à trouver :", solutionWord);
-}
+    // Réinitialise l'état du jeu et démarre une nouvelle partie
+    function initGame() {
+      solutionWord = chooseSolution();
+      currentRow = 0;
+      gameOver = false;
+      currentGuess = "";
+      messageElem.textContent = "";
+      newGameButton.style.display = "none";
+      updateScoreBox();
+      createBoard();
+      clearKeyboardColors();
+      enableKeyboard();
+      gameStartTime = Date.now();
+      console.log("Mot à trouver :", solutionWord);
+    }
 
-// Fonction d'évaluation de la tentative : renvoie un tableau de "correct" | "present" | "absent"
-function evaluateGuess(guess, solution) {
-const result = Array(guess.length).fill("absent");
-const solutionLetterCount = {};
+    // Fonction d'évaluation de la tentative : renvoie un tableau de "correct" | "present" | "absent"
+    function evaluateGuess(guess, solution) {
+      const result = Array(guess.length).fill("absent");
+      const solutionLetterCount = {};
 
-// Comptabiliser les lettres du mot solution
-for (let i = 0; i < solution.length; i++) {
-const letter = solution[i];
-solutionLetterCount[letter] = (solutionLetterCount[letter] || 0) + 1;
-}
+      // Comptabiliser les lettres du mot solution
+      for (let i = 0; i < solution.length; i++) {
+        const letter = solution[i];
+        solutionLetterCount[letter] = (solutionLetterCount[letter] || 0) + 1;
+      }
 
-// Première passe : lettres bien placées
-for (let i = 0; i < guess.length; i++) {
-if (guess[i] === solution[i]) {
-result[i] = "correct";
-solutionLetterCount[guess[i]]--;
-}
-}
+      // Première passe : lettres bien placées
+      for (let i = 0; i < guess.length; i++) {
+        if (guess[i] === solution[i]) {
+          result[i] = "correct";
+          solutionLetterCount[guess[i]]--;
+        }
+      }
 
-// Deuxième passe : lettres présentes mais mal placées
-for (let i = 0; i < guess.length; i++) {
-if (result[i] !== "correct" && solutionLetterCount[guess[i]] > 0) {
-result[i] = "present";
-solutionLetterCount[guess[i]]--;
-}
-}
-return result;
-}
+      // Deuxième passe : lettres présentes mais mal placées
+      for (let i = 0; i < guess.length; i++) {
+        if (result[i] !== "correct" && solutionLetterCount[guess[i]] > 0) {
+          result[i] = "present";
+          solutionLetterCount[guess[i]]--;
+        }
+      }
+      return result;
+    }
 
-// Gérer la soumission d'une tentative
-function handleGuess() {
-if (gameOver) return;
+    // Met à jour la ligne courante du plateau avec la saisie en cours
+    function updateCurrentRow() {
+      const rowElem = boardElem.children[currentRow];
+      for (let i = 0; i < solutionWord.length; i++) {
+        const cell = rowElem.children[i];
+        cell.textContent = currentGuess[i] || "";
+      }
+    }
 
-const guess = guessInput.value.trim().toLowerCase();
-if (guess.length !== solutionWord.length) {
-alert("Le mot doit contenir " + solutionWord.length + " lettres.");
-return;
-}
+    // Gérer la soumission d'une tentative via le clavier virtuel
+    function handleGuess() {
+      if (gameOver) return;
+      if (currentGuess.length !== solutionWord.length) {
+        alert("Le mot doit contenir " + solutionWord.length + " lettres.");
+        return;
+      }
 
-const evaluation = evaluateGuess(guess, solutionWord);
-// Récupère la ligne de la grille correspondant à la tentative actuelle
-const rowElem = boardElem.children[currentRow];
-for (let i = 0; i < evaluation.length; i++) {
-const cell = rowElem.children[i];
-cell.textContent = guess[i];
-cell.classList.add(evaluation[i]); // Ajoute la classe "correct", "present" ou "absent"
-}
+      const evaluation = evaluateGuess(currentGuess, solutionWord);
+      const rowElem = boardElem.children[currentRow];
 
-// Vérifier si la réponse est correcte
-if (guess === solutionWord) {
-messageElem.textContent = "Bravo ! Vous avez trouvé le verbe.";
-gameOver = true;
-currentStreak++;
-if (currentStreak > bestStreak) {
-bestStreak = currentStreak;
-localStorage.setItem("bestStreak", bestStreak);
-}
-updateScoreBox();
-guessInput.disabled = true;
-submitButton.disabled = true;
-newGameButton.style.display = "inline-block";
-} else {
-currentRow++;
-if (currentRow >= guessLimit) {
-messageElem.textContent = "Perdu ! Le verbe était : " + solutionWord;
-gameOver = true;
-currentStreak = 0;
-updateScoreBox();
-guessInput.disabled = true;
-submitButton.disabled = true;
-newGameButton.style.display = "inline-block";
-} else {
-// Passer à la ligne suivante et vider l'input
-guessInput.value = "";
-guessInput.focus();
-}
-}
-}
+      // Animation échelonnée pour chaque cellule
+      for (let i = 0; i < evaluation.length; i++) {
+        const cell = rowElem.children[i];
+        setTimeout(() => {
+          cell.classList.add("flip");
+          cell.classList.add(evaluation[i]);
+          updateKeyColor(cell.textContent, evaluation[i]);
+        }, i * 300);
+      }
 
-// Gestion du clic sur le bouton "Valider" ou sur la touche "Entrée"
-submitButton.addEventListener("click", handleGuess);
-guessInput.addEventListener("keydown", function(e) {
-if (e.key === "Enter") {
-handleGuess();
-}
-});
+      // Vérifier le résultat après l'animation
+      setTimeout(() => {
+        if (currentGuess === solutionWord) {
+          messageElem.textContent = "Bravo ! Vous avez trouvé le verbe.";
+          gameOver = true;
+          currentStreak++;
+          if (currentStreak > bestStreak) {
+            bestStreak = currentStreak;
+            localStorage.setItem("bestStreak", bestStreak);
+          }
+        } else {
+          currentRow++;
+          if (currentRow >= guessLimit) {
+            messageElem.textContent = "Perdu ! Le verbe était : " + solutionWord;
+            gameOver = true;
+            currentStreak = 0;
+          }
+        }
+        currentGuess = "";
+      }, evaluation.length * 300 + 300);
+    }
 
-// Bouton pour démarrer une nouvelle partie
-newGameButton.addEventListener("click", function() {
-initGame();
-});
+    /* Gestion du clavier virtuel en AZERTY avec échange de "DELETE" et "ENTER" */
+    const keyboardLayout = [
+      ["A", "Z", "E", "R", "T", "Y", "U", "I", "O", "P"],
+      ["Q", "S", "D", "F", "G", "H", "J", "K", "L", "M"],
+      ["Delete", "W", "X", "C", "V", "B", "N", "Enter"]
+    ];
 
-// Démarrage de la première partie
-updateScoreBox();
-initGame();
-</script>
+    function createKeyboard() {
+      keyboardLayout.forEach((row, rowIndex) => {
+        const rowElem = document.getElementById("row" + (rowIndex + 1));
+        row.forEach(key => {
+          const keyButton = document.createElement("button");
+          keyButton.textContent = key;
+          keyButton.classList.add("key");
+          keyButton.addEventListener("click", () => handleKey(key));
+          rowElem.appendChild(keyButton);
+        });
+      });
+    }
+
+    function handleKey(key) {
+      if (gameOver) return;
+      if (key === "Enter") {
+        handleGuess();
+      } else if (key === "Delete") {
+        if (currentGuess.length > 0) {
+          currentGuess = currentGuess.slice(0, -1);
+          updateCurrentRow();
+        }
+      } else {
+        if (currentGuess.length < solutionWord.length) {
+          currentGuess += key.toLowerCase();
+          updateCurrentRow();
+        }
+      }
+    }
+
+    function disableKeyboard() {
+      const keys = document.querySelectorAll(".key");
+      keys.forEach(key => key.disabled = true);
+    }
+
+    function enableKeyboard() {
+      const keys = document.querySelectorAll(".key");
+      keys.forEach(key => key.disabled = false);
+    }
+
+    // Met à jour la couleur des touches en fonction de l'évaluation
+    function updateKeyColor(letter, status) {
+      const keys = document.querySelectorAll(".key");
+      keys.forEach(key => {
+        if (key.textContent.toLowerCase() === letter) {
+          if (status === "correct") {
+            key.style.backgroundColor = "#6aaa64";
+            key.style.color = "white";
+          } else if (status === "present" && key.style.backgroundColor !== "rgb(106, 170, 100)") {
+            key.style.backgroundColor = "#c9b458";
+            key.style.color = "white";
+          } else if (status === "absent" && key.style.backgroundColor !== "rgb(106, 170, 100)" && key.style.backgroundColor !== "rgb(201, 180, 88)") {
+            key.style.backgroundColor = "#787c7e";
+            key.style.color = "white";
+          }
+        }
+      });
+    }
+
+    function clearKeyboardColors() {
+      const keys = document.querySelectorAll(".key");
+      keys.forEach(key => {
+        key.style.backgroundColor = "";
+        key.style.color = "";
+      });
+      enableKeyboard();
+    }
+
+    newGameButton.addEventListener("click", initGame);
+
+    // Initialisation
+    createKeyboard();
+    updateScoreBox();
+    initGame();
+  </script>
 </body>
 </html>
