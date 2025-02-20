@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wordle – Verbes Irréguliers</title>
   <style>
-    /* Styles généraux et responsive */
     body {
       font-family: sans-serif;
       display: flex;
@@ -19,18 +18,22 @@
       text-align: center;
       margin: 10px;
     }
+    .legend {
+      text-align: center;
+      margin: 3px;
+      padding: 3px;
+      font-weight: bold;
+    }
     #score-box {
       margin-bottom: 10px;
       font-size: 18px;
       font-weight: bold;
     }
-    /* Réduction des marges pour les légendes */
-    .legend {
-      background-color: transparent;
-      text-align: center;
-      margin: 5px;
-      padding: 3px;
-      font-weight: bold;
+    /* Conteneur de la grille */
+    #board-container {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
     }
     #board {
       display: flex;
@@ -38,7 +41,6 @@
       gap: 8px;
       margin-bottom: 20px;
       width: 100%;
-      max-width: 500px;
     }
     .row {
       display: flex;
@@ -94,6 +96,22 @@
       padding: 6px 12px;
       font-size: 16px;
       margin-top: 10px;
+      display: none;
+    }
+    /* Fenêtre modale placée dans #board-container */
+    #verb-info {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      background-color: rgba(255,255,255,0.95);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+      max-width: 90%;
+      text-align: left;
+      font-size: 16px;
     }
     /* Clavier virtuel en disposition AZERTY */
     #virtual-keyboard {
@@ -139,6 +157,9 @@
         padding: 8px 4px;
         font-size: 14px;
       }
+      #verb-info {
+        font-size: 14px;
+      }
     }
   </style>
 </head>
@@ -149,7 +170,10 @@
   <p class="legend" style="background-color:Khaki;"><b>Lettre mal placée</b></p>
   <p class="legend" style="background-color:LightGray;"><b>Lettre absente</b></p>
   <div id="score-box">Meilleur série : 0 | Série actuelle : 0</div>
-  <div id="board"></div>
+  <!-- Conteneur de la grille de jeu -->
+  <div id="board-container">
+    <div id="board"></div>
+  </div>
   <div id="message"></div>
   <!-- Clavier virtuel AZERTY -->
   <div id="virtual-keyboard">
@@ -157,12 +181,100 @@
     <div class="keyboard-row" id="row2"></div>
     <div class="keyboard-row" id="row3"></div>
   </div>
-  <button id="new-game-button" style="display:none;">Nouvelle Partie</button>
+  <button id="new-game-button">Nouvelle Partie</button>
   <footer>
     <img src="https://i.ibb.co/BVQNGxTM/logo-Wordle2.png" alt="logo-Wordle2" border="0" style="max-width: 200px;">
   </footer>
   <script>
-    // Liste des verbes irréguliers
+    // Base de données de conjugaison et traduction pour l'ensemble des verbes
+    const verbData = {
+      "beat":      { base: "beat",    preterit: "beat",    past: "beaten",    translation: "battre" },
+      "became":    { base: "become",  preterit: "became",  past: "become",    translation: "devenir" },
+      "began":     { base: "begin",   preterit: "began",   past: "begun",     translation: "commencer" },
+      "bet":       { base: "bet",     preterit: "bet",     past: "bet",       translation: "parier" },
+      "bit":       { base: "bite",    preterit: "bit",     past: "bitten",    translation: "mordre" },
+      "bled":      { base: "bleed",   preterit: "bled",    past: "bled",      translation: "saigner" },
+      "broke":     { base: "break",   preterit: "broke",   past: "broken",    translation: "casser" },
+      "brought":   { base: "bring",   preterit: "brought", past: "brought",   translation: "apporter" },
+      "built":     { base: "build",   preterit: "built",   past: "built",     translation: "construire" },
+      "burnt":     { base: "burn",    preterit: "burnt",   past: "burnt",     translation: "brûler" },
+      "bought":    { base: "buy",     preterit: "bought",  past: "bought",    translation: "acheter" },
+      "cast":      { base: "cast",    preterit: "cast",    past: "cast",      translation: "jeter" },
+      "caught":    { base: "catch",   preterit: "caught",  past: "caught",    translation: "attraper" },
+      "chose":     { base: "choose",  preterit: "chose",   past: "chosen",    translation: "choisir" },
+      "came":      { base: "come",    preterit: "came",    past: "come",      translation: "venir" },
+      "cost":      { base: "cost",    preterit: "cost",    past: "cost",      translation: "coûter" },
+      "cut":       { base: "cut",     preterit: "cut",     past: "cut",       translation: "couper" },
+      "did":       { base: "do",      preterit: "did",     past: "done",      translation: "faire" },
+      "drew":      { base: "draw",    preterit: "drew",    past: "drawn",     translation: "dessiner" },
+      "dreamt":    { base: "dream",   preterit: "dreamt",  past: "dreamt",    translation: "rêver" },
+      "drank":     { base: "drink",   preterit: "drank",   past: "drunk",     translation: "boire" },
+      "drove":     { base: "drive",   preterit: "drove",   past: "driven",    translation: "conduire" },
+      "ate":       { base: "eat",     preterit: "ate",     past: "eaten",     translation: "manger" },
+      "fell":      { base: "fall",    preterit: "fell",    past: "fallen",    translation: "tomber" },
+      "fed":       { base: "feed",    preterit: "fed",     past: "fed",       translation: "nourrir" },
+      "felt":      { base: "feel",    preterit: "felt",    past: "felt",      translation: "sentir" },
+      "fought":    { base: "fight",   preterit: "fought",  past: "fought",    translation: "combattre" },
+      "found":     { base: "find",    preterit: "found",   past: "found",     translation: "trouver" },
+      "flew":      { base: "fly",     preterit: "flew",    past: "flown",     translation: "voler" },
+      "forbade":   { base: "forbid",  preterit: "forbade", past: "forbidden", translation: "interdire" },
+      "forgot":    { base: "forget",  preterit: "forgot",  past: "forgotten", translation: "oublier" },
+      "forgave":   { base: "forgive", preterit: "forgave", past: "forgiven",  translation: "pardonner" },
+      "got":       { base: "get",     preterit: "got",     past: "gotten",    translation: "obtenir" },
+      "gave":      { base: "give",    preterit: "gave",    past: "given",     translation: "donner" },
+      "went":      { base: "go",      preterit: "went",    past: "gone",      translation: "aller" },
+      "grew":      { base: "grow",    preterit: "grew",    past: "grown",     translation: "grandir" },
+      "hung":      { base: "hang",    preterit: "hung",    past: "hung",      translation: "pendre" },
+      "had":       { base: "have",    preterit: "had",     past: "had",       translation: "avoir" },
+      "heard":     { base: "hear",    preterit: "heard",   past: "heard",     translation: "entendre" },
+      "hid":       { base: "hide",    preterit: "hid",     past: "hidden",    translation: "cacher" },
+      "hit":       { base: "hit",     preterit: "hit",     past: "hit",       translation: "frapper" },
+      "held":      { base: "hold",    preterit: "held",    past: "held",      translation: "tenir" },
+      "hurt":      { base: "hurt",    preterit: "hurt",    past: "hurt",      translation: "blesser" },
+      "kept":      { base: "keep",    preterit: "kept",    past: "kept",      translation: "garder" },
+      "knew":      { base: "know",    preterit: "knew",    past: "known",     translation: "savoir" },
+      "learnt":    { base: "learn",   preterit: "learnt",  past: "learnt",    translation: "apprendre" },
+      "left":      { base: "leave",   preterit: "left",    past: "left",      translation: "quitter" },
+      "let":       { base: "let",     preterit: "let",     past: "let",       translation: "laisser" },
+      "lost":      { base: "lose",    preterit: "lost",    past: "lost",      translation: "perdre" },
+      "made":      { base: "make",    preterit: "made",    past: "made",      translation: "fabriquer" },
+      "meant":     { base: "mean",    preterit: "meant",   past: "meant",     translation: "vouloir dire" },
+      "met":       { base: "meet",    preterit: "met",     past: "met",       translation: "rencontrer" },
+      "paid":      { base: "pay",     preterit: "paid",    past: "paid",      translation: "payer" },
+      "put":       { base: "put",     preterit: "put",     past: "put",       translation: "mettre" },
+      "read":      { base: "read",    preterit: "read",    past: "read",      translation: "lire" },
+      "rose":      { base: "rise",    preterit: "rose",    past: "risen",     translation: "se lever" },
+      "ran":       { base: "run",     preterit: "ran",     past: "run",       translation: "courir" },
+      "said":      { base: "say",     preterit: "said",    past: "said",      translation: "dire" },
+      "saw":       { base: "see",     preterit: "saw",     past: "seen",      translation: "voir" },
+      "sold":      { base: "sell",    preterit: "sold",    past: "sold",      translation: "vendre" },
+      "sent":      { base: "send",    preterit: "sent",    past: "sent",      translation: "envoyer" },
+      "shot":      { base: "shoot",   preterit: "shot",    past: "shot",      translation: "tirer" },
+      "showed":    { base: "show",    preterit: "showed",  past: "shown",     translation: "montrer" },
+      "shut":      { base: "shut",    preterit: "shut",    past: "shut",      translation: "fermer" },
+      "sang":      { base: "sing",    preterit: "sang",    past: "sung",      translation: "chanter" },
+      "sat":       { base: "sit",     preterit: "sat",     past: "sat",       translation: "s'asseoir" },
+      "slept":     { base: "sleep",   preterit: "slept",   past: "slept",     translation: "dormir" },
+      "smelt":     { base: "smell",   preterit: "smelt",   past: "smelt",     translation: "sentir (odeur)" },
+      "spoke":     { base: "speak",   preterit: "spoke",   past: "spoken",    translation: "parler" },
+      "spent":     { base: "spend",   preterit: "spent",   past: "spent",     translation: "dépenser" },
+      "stole":     { base: "steal",   preterit: "stole",   past: "stolen",    translation: "voler (dérober)" },
+      "swam":      { base: "swim",    preterit: "swam",    past: "swum",      translation: "nager" },
+      "took":      { base: "take",    preterit: "took",    past: "taken",     translation: "prendre" },
+      "taught":    { base: "teach",   preterit: "taught",  past: "taught",    translation: "enseigner" },
+      "tore":      { base: "tear",    preterit: "tore",    past: "torn",      translation: "déchirer" },
+      "told":      { base: "tell",    preterit: "told",    past: "told",      translation: "raconter" },
+      "thought":   { base: "think",   preterit: "thought", past: "thought",   translation: "penser" },
+      "threw":     { base: "throw",   preterit: "threw",   past: "thrown",    translation: "jeter" },
+      "understood":{ base: "understand", preterit: "understood", past: "understood", translation: "comprendre" },
+      "woke":      { base: "wake",    preterit: "woke",    past: "woken",     translation: "se réveiller" },
+      "won":       { base: "win",     preterit: "won",     past: "won",       translation: "gagner" },
+      "wrote":     { base: "write",   preterit: "wrote",   past: "written",   translation: "écrire" },
+      "was":       { base: "be",      preterit: "was",     past: "been",      translation: "être" },
+      "were":      { base: "be",      preterit: "were",    past: "been",      translation: "être" }
+    };
+
+    // Liste des verbes du jeu
     const verbs = [
       "beat", "became", "began", "bet", "bit", "bled", "broke", "brought",
       "built", "burnt", "bought", "cast", "caught", "chose", "came", "cost",
@@ -176,24 +288,21 @@
       "won", "wrote", "was", "were"
     ];
 
-    const guessLimit = 5; // 5 tentatives autorisées
-    let solutionWord = ""; // Le verbe à trouver (choisi aléatoirement)
-    let currentRow = 0; // Index de la ligne en cours
+    const guessLimit = 5;
+    let solutionWord = "";
+    let currentRow = 0;
     let gameOver = false;
     let currentGuess = "";
-    let gameStartTime = 0; // Pour mesurer la durée d'une partie
+    let gameStartTime = 0;
 
-    // Pour le score (série de bonnes réponses)
     let currentStreak = 0;
     let bestStreak = localStorage.getItem("bestStreak") ? parseInt(localStorage.getItem("bestStreak")) : 0;
 
-    // Références aux éléments HTML
     const boardElem = document.getElementById("board");
     const messageElem = document.getElementById("message");
     const scoreBox = document.getElementById("score-box");
     const newGameButton = document.getElementById("new-game-button");
 
-    // Crée la grille de jeu en fonction de la longueur du mot solution
     function createBoard() {
       boardElem.innerHTML = "";
       for (let i = 0; i < guessLimit; i++) {
@@ -209,19 +318,36 @@
       }
     }
 
-    // Met à jour l'affichage du score
     function updateScoreBox() {
       scoreBox.textContent = "Meilleur série : " + bestStreak + " | Série actuelle : " + currentStreak;
     }
 
-    // Choisit un verbe aléatoirement dans la liste
     function chooseSolution() {
       const randIndex = Math.floor(Math.random() * verbs.length);
       return verbs[randIndex];
     }
 
-    // Réinitialise l'état du jeu et démarre une nouvelle partie
+    // Affiche le conteneur modale avec les infos du verbe, inséré dans #board-container
+    function displayVerbInfo() {
+      const boardContainer = document.getElementById("board-container");
+      const infoContainer = document.createElement("div");
+      infoContainer.id = "verb-info";
+      const data = verbData[solutionWord];
+      if (!data) {
+        infoContainer.innerHTML = "<p>Données non disponibles pour ce verbe.</p>";
+      } else {
+        infoContainer.innerHTML = "<p><strong>Base verbale :</strong> " + data.base + "</p>" +
+                                  "<p><strong>Prétérit :</strong> " + data.preterit + "</p>" +
+                                  "<p><strong>Participe passé :</strong> " + data.past + "</p>" +
+                                  "<p><strong>Traduction :</strong> " + data.translation + "</p>";
+      }
+      boardContainer.appendChild(infoContainer);
+    }
+
     function initGame() {
+      // Supprime la modale précédente si elle existe
+      const oldInfo = document.getElementById("verb-info");
+      if (oldInfo) oldInfo.remove();
       solutionWord = chooseSolution();
       currentRow = 0;
       gameOver = false;
@@ -236,26 +362,19 @@
       console.log("Mot à trouver :", solutionWord);
     }
 
-    // Fonction d'évaluation de la tentative : renvoie un tableau de "correct" | "present" | "absent"
     function evaluateGuess(guess, solution) {
       const result = Array(guess.length).fill("absent");
       const solutionLetterCount = {};
-
-      // Comptabiliser les lettres du mot solution
       for (let i = 0; i < solution.length; i++) {
         const letter = solution[i];
         solutionLetterCount[letter] = (solutionLetterCount[letter] || 0) + 1;
       }
-
-      // Première passe : lettres bien placées
       for (let i = 0; i < guess.length; i++) {
         if (guess[i] === solution[i]) {
           result[i] = "correct";
           solutionLetterCount[guess[i]]--;
         }
       }
-
-      // Deuxième passe : lettres présentes mais mal placées
       for (let i = 0; i < guess.length; i++) {
         if (result[i] !== "correct" && solutionLetterCount[guess[i]] > 0) {
           result[i] = "present";
@@ -265,7 +384,6 @@
       return result;
     }
 
-    // Met à jour la ligne courante du plateau avec la saisie en cours
     function updateCurrentRow() {
       const rowElem = boardElem.children[currentRow];
       for (let i = 0; i < solutionWord.length; i++) {
@@ -274,18 +392,14 @@
       }
     }
 
-    // Gérer la soumission d'une tentative via le clavier virtuel
     function handleGuess() {
       if (gameOver) return;
       if (currentGuess.length !== solutionWord.length) {
         alert("Le mot doit contenir " + solutionWord.length + " lettres.");
         return;
       }
-
       const evaluation = evaluateGuess(currentGuess, solutionWord);
       const rowElem = boardElem.children[currentRow];
-
-      // Animation échelonnée pour chaque cellule
       for (let i = 0; i < evaluation.length; i++) {
         const cell = rowElem.children[i];
         setTimeout(() => {
@@ -294,8 +408,6 @@
           updateKeyColor(cell.textContent, evaluation[i]);
         }, i * 300);
       }
-
-      // Vérifier le résultat après l'animation
       setTimeout(() => {
         if (currentGuess === solutionWord) {
           messageElem.textContent = "Bravo ! Vous avez trouvé le verbe.";
@@ -305,19 +417,24 @@
             bestStreak = currentStreak;
             localStorage.setItem("bestStreak", bestStreak);
           }
+          newGameButton.textContent = "Partie suivante";
         } else {
           currentRow++;
           if (currentRow >= guessLimit) {
             messageElem.textContent = "Perdu ! Le verbe était : " + solutionWord;
             gameOver = true;
             currentStreak = 0;
+            newGameButton.textContent = "Recommencer";
           }
+        }
+        if (gameOver) {
+          displayVerbInfo();
+          newGameButton.style.display = "inline-block";
         }
         currentGuess = "";
       }, evaluation.length * 300 + 300);
     }
 
-    /* Gestion du clavier virtuel en AZERTY avec échange de "DELETE" et "ENTER" */
     const keyboardLayout = [
       ["A", "Z", "E", "R", "T", "Y", "U", "I", "O", "P"],
       ["Q", "S", "D", "F", "G", "H", "J", "K", "L", "M"],
@@ -355,19 +472,15 @@
     }
 
     function disableKeyboard() {
-      const keys = document.querySelectorAll(".key");
-      keys.forEach(key => key.disabled = true);
+      document.querySelectorAll(".key").forEach(key => key.disabled = true);
     }
 
     function enableKeyboard() {
-      const keys = document.querySelectorAll(".key");
-      keys.forEach(key => key.disabled = false);
+      document.querySelectorAll(".key").forEach(key => key.disabled = false);
     }
 
-    // Met à jour la couleur des touches en fonction de l'évaluation
     function updateKeyColor(letter, status) {
-      const keys = document.querySelectorAll(".key");
-      keys.forEach(key => {
+      document.querySelectorAll(".key").forEach(key => {
         if (key.textContent.toLowerCase() === letter) {
           if (status === "correct") {
             key.style.backgroundColor = "#6aaa64";
@@ -375,7 +488,9 @@
           } else if (status === "present" && key.style.backgroundColor !== "rgb(106, 170, 100)") {
             key.style.backgroundColor = "#c9b458";
             key.style.color = "white";
-          } else if (status === "absent" && key.style.backgroundColor !== "rgb(106, 170, 100)" && key.style.backgroundColor !== "rgb(201, 180, 88)") {
+          } else if (status === "absent" &&
+                    key.style.backgroundColor !== "rgb(106, 170, 100)" &&
+                    key.style.backgroundColor !== "rgb(201, 180, 88)") {
             key.style.backgroundColor = "#787c7e";
             key.style.color = "white";
           }
@@ -384,8 +499,7 @@
     }
 
     function clearKeyboardColors() {
-      const keys = document.querySelectorAll(".key");
-      keys.forEach(key => {
+      document.querySelectorAll(".key").forEach(key => {
         key.style.backgroundColor = "";
         key.style.color = "";
       });
@@ -394,7 +508,6 @@
 
     newGameButton.addEventListener("click", initGame);
 
-    // Initialisation
     createKeyboard();
     updateScoreBox();
     initGame();
