@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wordle – Verbes Irréguliers</title>
+  <title>Irregular Wordle</title>
   <style>
     body {
       font-family: sans-serif;
@@ -98,7 +98,7 @@
       margin-top: 10px;
       display: none;
     }
-    /* Fenêtre modale placée dans #board-container */
+    /* Fenêtre modale placée dans le conteneur de la grille */
     #verb-info {
       position: absolute;
       top: 50%;
@@ -164,13 +164,13 @@
   </style>
 </head>
 <body>
-  <h1>Wordle – Verbes Irréguliers</h1>
+  <h1>Irregular Wordle</h1>
   <h2>Tu n'as que 5 essais, alors réfléchis bien :</h2>
   <p class="legend" style="background-color:Chartreuse;"><b>Lettre bien placée</b></p>
   <p class="legend" style="background-color:Khaki;"><b>Lettre mal placée</b></p>
   <p class="legend" style="background-color:LightGray;"><b>Lettre absente</b></p>
   <div id="score-box">Meilleur série : 0 | Série actuelle : 0</div>
-  <!-- Conteneur de la grille de jeu -->
+  <!-- Conteneur de la grille -->
   <div id="board-container">
     <div id="board"></div>
   </div>
@@ -327,25 +327,41 @@
       return verbs[randIndex];
     }
 
-    // Affiche le conteneur modale avec les infos du verbe, inséré dans #board-container
-    function displayVerbInfo() {
+    // Affiche la fenêtre modale avec les infos du verbe dans le conteneur de la grille
+    // L'image s'affiche à droite pour une bonne réponse et à droite (déjà définie) pour une mauvaise réponse.
+    // Ici, nous déplaçons l'image pour la bonne réponse à droite du texte.
+    function displayVerbInfo(isWin) {
       const boardContainer = document.getElementById("board-container");
       const infoContainer = document.createElement("div");
       infoContainer.id = "verb-info";
       const data = verbData[solutionWord];
+      let content = "";
       if (!data) {
-        infoContainer.innerHTML = "<p>Données non disponibles pour ce verbe.</p>";
+        content = "<p>Données non disponibles pour ce verbe.</p>";
       } else {
-        infoContainer.innerHTML = "<p><strong>Base verbale :</strong> " + data.base + "</p>" +
-                                  "<p><strong>Prétérit :</strong> " + data.preterit + "</p>" +
-                                  "<p><strong>Participe passé :</strong> " + data.past + "</p>" +
-                                  "<p><strong>Traduction :</strong> " + data.translation + "</p>";
+        const infoText = "<p><strong>Base verbale :</strong> " + data.base + "</p>" +
+                         "<p><strong>Prétérit :</strong> " + data.preterit + "</p>" +
+                         "<p><strong>Participe passé :</strong> " + data.past + "</p>" +
+                         "<p><strong>Traduction :</strong> " + data.translation + "</p>";
+        if (isWin) {
+          // Pour une bonne réponse, l'image apparaît à droite du texte
+          content = `<div style="display: flex; align-items: center;">
+                      <div>${infoText}</div>
+                      <img src="https://sdk.bitmoji.com/render/panel/db24c795-e74a-4c0d-96f3-a2bab7b35c13-d449fd80-704c-4d7a-94b3-946fe063bc25-v1.png?transparent=1&palette=1" style="width: 80px; margin-left: 10px;">
+                     </div>`;
+        } else {
+          // Pour une mauvaise réponse, l'image reste à droite
+          content = `<div style="display: flex; align-items: center;">
+                      <div>${infoText}</div>
+                      <img src="https://sdk.bitmoji.com/render/panel/3e2ad017-8c55-4d51-b242-c2c91bfa8551-d449fd80-704c-4d7a-94b3-946fe063bc25-v1.png?transparent=1&palette=1" style="width: 80px; margin-left: 10px;">
+                     </div>`;
+        }
       }
+      infoContainer.innerHTML = content;
       boardContainer.appendChild(infoContainer);
     }
 
     function initGame() {
-      // Supprime la modale précédente si elle existe
       const oldInfo = document.getElementById("verb-info");
       if (oldInfo) oldInfo.remove();
       solutionWord = chooseSolution();
@@ -409,7 +425,8 @@
         }, i * 300);
       }
       setTimeout(() => {
-        if (currentGuess === solutionWord) {
+        const isWin = (currentGuess === solutionWord);
+        if (isWin) {
           messageElem.textContent = "Bravo ! Vous avez trouvé le verbe.";
           gameOver = true;
           currentStreak++;
@@ -428,7 +445,7 @@
           }
         }
         if (gameOver) {
-          displayVerbInfo();
+          displayVerbInfo(isWin);
           newGameButton.style.display = "inline-block";
         }
         currentGuess = "";
