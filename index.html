@@ -92,12 +92,6 @@
       min-height: 24px;
       text-align: center;
     }
-    #new-game-button {
-      padding: 6px 12px;
-      font-size: 16px;
-      margin-top: 10px;
-      display: none;
-    }
     /* Fenêtre modale placée dans le conteneur de la grille */
     #verb-info {
       position: absolute;
@@ -112,6 +106,13 @@
       max-width: 90%;
       text-align: left;
       font-size: 16px;
+    }
+    /* Bouton dans la modale */
+    #modal-button {
+      margin-top: 15px;
+      padding: 6px 12px;
+      font-size: 16px;
+      cursor: pointer;
     }
     /* Clavier virtuel en disposition AZERTY */
     #virtual-keyboard {
@@ -160,6 +161,9 @@
       #verb-info {
         font-size: 14px;
       }
+      #modal-button {
+        font-size: 14px;
+      }
     }
   </style>
 </head>
@@ -181,7 +185,6 @@
     <div class="keyboard-row" id="row2"></div>
     <div class="keyboard-row" id="row3"></div>
   </div>
-  <button id="new-game-button">Nouvelle Partie</button>
   <footer>
     <img src="https://i.ibb.co/BVQNGxTM/logo-Wordle2.png" alt="logo-Wordle2" border="0" style="max-width: 200px;">
   </footer>
@@ -301,7 +304,6 @@
     const boardElem = document.getElementById("board");
     const messageElem = document.getElementById("message");
     const scoreBox = document.getElementById("score-box");
-    const newGameButton = document.getElementById("new-game-button");
 
     function createBoard() {
       boardElem.innerHTML = "";
@@ -327,9 +329,8 @@
       return verbs[randIndex];
     }
 
-    // Affiche la fenêtre modale avec les infos du verbe dans le conteneur de la grille
-    // L'image s'affiche à droite pour une bonne réponse et à droite (déjà définie) pour une mauvaise réponse.
-    // Ici, nous déplaçons l'image pour la bonne réponse à droite du texte.
+    // Affiche la fenêtre modale avec les infos du verbe dans #board-container,
+    // et y intègre le bouton d'action.
     function displayVerbInfo(isWin) {
       const boardContainer = document.getElementById("board-container");
       const infoContainer = document.createElement("div");
@@ -343,21 +344,22 @@
                          "<p><strong>Prétérit :</strong> " + data.preterit + "</p>" +
                          "<p><strong>Participe passé :</strong> " + data.past + "</p>" +
                          "<p><strong>Traduction :</strong> " + data.translation + "</p>";
-        if (isWin) {
-          // Pour une bonne réponse, l'image apparaît à droite du texte
-          content = `<div style="display: flex; align-items: center;">
-                      <div>${infoText}</div>
-                      <img src="https://sdk.bitmoji.com/render/panel/db24c795-e74a-4c0d-96f3-a2bab7b35c13-d449fd80-704c-4d7a-94b3-946fe063bc25-v1.png?transparent=1&palette=1" style="width: 80px; margin-left: 10px;">
-                     </div>`;
-        } else {
-          // Pour une mauvaise réponse, l'image reste à droite
-          content = `<div style="display: flex; align-items: center;">
-                      <div>${infoText}</div>
-                      <img src="https://sdk.bitmoji.com/render/panel/3e2ad017-8c55-4d51-b242-c2c91bfa8551-d449fd80-704c-4d7a-94b3-946fe063bc25-v1.png?transparent=1&palette=1" style="width: 80px; margin-left: 10px;">
-                     </div>`;
-        }
+        // Pour cette demande, l'image pour une bonne réponse est désormais affichée à droite du texte.
+        content = `<div style="display: flex; align-items: center;">
+                    <div>${infoText}</div>
+                    <img src="${isWin ? "https://sdk.bitmoji.com/render/panel/db24c795-e74a-4c0d-96f3-a2bab7b35c13-d449fd80-704c-4d7a-94b3-946fe063bc25-v1.png?transparent=1&palette=1" : "https://sdk.bitmoji.com/render/panel/3e2ad017-8c55-4d51-b242-c2c91bfa8551-d449fd80-704c-4d7a-94b3-946fe063bc25-v1.png?transparent=1&palette=1"}" style="width: 80px; margin-left: 10px;">
+                   </div>`;
       }
+      // Création du bouton d'action dans la modale
+      const modalButton = document.createElement("button");
+      modalButton.id = "modal-button";
+      modalButton.textContent = isWin ? "Partie suivante" : "Recommencer";
+      modalButton.addEventListener("click", () => {
+        infoContainer.remove();
+        initGame();
+      });
       infoContainer.innerHTML = content;
+      infoContainer.appendChild(modalButton);
       boardContainer.appendChild(infoContainer);
     }
 
@@ -369,7 +371,6 @@
       gameOver = false;
       currentGuess = "";
       messageElem.textContent = "";
-      newGameButton.style.display = "none";
       updateScoreBox();
       createBoard();
       clearKeyboardColors();
@@ -434,19 +435,16 @@
             bestStreak = currentStreak;
             localStorage.setItem("bestStreak", bestStreak);
           }
-          newGameButton.textContent = "Partie suivante";
         } else {
           currentRow++;
           if (currentRow >= guessLimit) {
             messageElem.textContent = "Perdu ! Le verbe était : " + solutionWord;
             gameOver = true;
             currentStreak = 0;
-            newGameButton.textContent = "Recommencer";
           }
         }
         if (gameOver) {
           displayVerbInfo(isWin);
-          newGameButton.style.display = "inline-block";
         }
         currentGuess = "";
       }, evaluation.length * 300 + 300);
@@ -522,8 +520,6 @@
       });
       enableKeyboard();
     }
-
-    newGameButton.addEventListener("click", initGame);
 
     createKeyboard();
     updateScoreBox();
