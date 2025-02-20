@@ -85,14 +85,16 @@
       color: white;
       border: none;
     }
+    /* Le message est déplacé vers le bas pour apparaître sous la modale */
     #message {
       font-size: 20px;
       font-weight: bold;
+      margin-top: 180px;
       margin-bottom: 15px;
       min-height: 24px;
       text-align: center;
     }
-    /* Fenêtre modale placée dans le conteneur de la grille */
+    /* Fenêtre modale dans #board-container */
     #verb-info {
       position: absolute;
       top: 50%;
@@ -168,7 +170,7 @@
   </style>
 </head>
 <body>
-  <h1>Irregular Wordle</h1>
+  <h1>IRREGULAR WORDLE</h1>
   <h2>Tu n'as que 5 essais, alors réfléchis bien :</h2>
   <p class="legend" style="background-color:Chartreuse;"><b>Lettre bien placée</b></p>
   <p class="legend" style="background-color:Khaki;"><b>Lettre mal placée</b></p>
@@ -329,8 +331,8 @@
       return verbs[randIndex];
     }
 
-    // Affiche la fenêtre modale avec les infos du verbe dans #board-container,
-    // et y intègre le bouton d'action.
+    // Affiche la fenêtre modale avec les infos du verbe dans le conteneur de la grille,
+    // et y intègre le bouton d'action directement dans la modale.
     function displayVerbInfo(isWin) {
       const boardContainer = document.getElementById("board-container");
       const infoContainer = document.createElement("div");
@@ -344,7 +346,7 @@
                          "<p><strong>Prétérit :</strong> " + data.preterit + "</p>" +
                          "<p><strong>Participe passé :</strong> " + data.past + "</p>" +
                          "<p><strong>Traduction :</strong> " + data.translation + "</p>";
-        // Pour cette demande, l'image pour une bonne réponse est désormais affichée à droite du texte.
+        // Pour une bonne réponse, l'image apparaît à droite du texte.
         content = `<div style="display: flex; align-items: center;">
                     <div>${infoText}</div>
                     <img src="${isWin ? "https://sdk.bitmoji.com/render/panel/db24c795-e74a-4c0d-96f3-a2bab7b35c13-d449fd80-704c-4d7a-94b3-946fe063bc25-v1.png?transparent=1&palette=1" : "https://sdk.bitmoji.com/render/panel/3e2ad017-8c55-4d51-b242-c2c91bfa8551-d449fd80-704c-4d7a-94b3-946fe063bc25-v1.png?transparent=1&palette=1"}" style="width: 80px; margin-left: 10px;">
