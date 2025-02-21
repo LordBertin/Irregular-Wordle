@@ -85,14 +85,16 @@
       color: white;
       border: none;
     }
+    /* On ne fait plus apparaître de message externe */
     #message {
       font-size: 20px;
       font-weight: bold;
+      margin-top: 20px;
       margin-bottom: 15px;
       min-height: 24px;
       text-align: center;
     }
-    /* Fenêtre modale placée dans le conteneur de la grille */
+    /* Fenêtre modale dans #board-container */
     #verb-info {
       position: absolute;
       top: 50%;
@@ -107,9 +109,10 @@
       text-align: left;
       font-size: 16px;
     }
-    /* Bouton dans la modale */
+    /* Bouton dans la modale centré */
     #modal-button {
-      margin-top: 15px;
+      display: block;
+      margin: 15px auto 0 auto;
       padding: 6px 12px;
       font-size: 16px;
       cursor: pointer;
@@ -121,7 +124,7 @@
       background-color: rgba(255, 255, 255, 0.8);
       padding: 10px;
       border-radius: 8px;
-      margin-top: 20px;
+      margin-top: 10px; /* Position remontée */
     }
     .keyboard-row {
       display: flex;
@@ -165,10 +168,18 @@
         font-size: 14px;
       }
     }
+    footer {
+      text-align: center;
+      margin-top: 20px;
+    }
+    footer p {
+      margin: 0 0 5px;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
-  <h1>IRREGULAR WORDLE</h1>
+  <h1>Irregular Wordle</h1>
   <h2>Tu n'as que 5 essais, alors réfléchis bien :</h2>
   <p class="legend" style="background-color:Chartreuse;"><b>Lettre bien placée</b></p>
   <p class="legend" style="background-color:Khaki;"><b>Lettre mal placée</b></p>
@@ -178,14 +189,16 @@
   <div id="board-container">
     <div id="board"></div>
   </div>
-  <div id="message"></div>
-  <!-- Clavier virtuel AZERTY -->
+  <!-- Le clavier est maintenant directement sous la grille -->
   <div id="virtual-keyboard">
     <div class="keyboard-row" id="row1"></div>
     <div class="keyboard-row" id="row2"></div>
     <div class="keyboard-row" id="row3"></div>
   </div>
+  <!-- Message externe (actuellement vide) -->
+  <div id="message"></div>
   <footer>
+    <p>Projet réalisé par F. Bertin, du collège Jean Moulin</p>
     <img src="https://i.ibb.co/BVQNGxTM/logo-Wordle2.png" alt="logo-Wordle2" border="0" style="max-width: 200px;">
   </footer>
   <script>
@@ -329,14 +342,15 @@
       return verbs[randIndex];
     }
 
-    // Affiche la fenêtre modale avec les infos du verbe dans #board-container,
-    // et y intègre le bouton d'action.
+    // Affiche la fenêtre modale dans le conteneur de la grille,
+    // avec un titre en fonction du résultat, le contenu d'information et le bouton d'action centré.
     function displayVerbInfo(isWin) {
       const boardContainer = document.getElementById("board-container");
       const infoContainer = document.createElement("div");
       infoContainer.id = "verb-info";
       const data = verbData[solutionWord];
       let content = "";
+      let title = isWin ? "Well Done !" : "Oh Nooo !";
       if (!data) {
         content = "<p>Données non disponibles pour ce verbe.</p>";
       } else {
@@ -344,13 +358,18 @@
                          "<p><strong>Prétérit :</strong> " + data.preterit + "</p>" +
                          "<p><strong>Participe passé :</strong> " + data.past + "</p>" +
                          "<p><strong>Traduction :</strong> " + data.translation + "</p>";
-        // Pour cette demande, l'image pour une bonne réponse est désormais affichée à droite du texte.
-        content = `<div style="display: flex; align-items: center;">
-                    <div>${infoText}</div>
-                    <img src="${isWin ? "https://sdk.bitmoji.com/render/panel/db24c795-e74a-4c0d-96f3-a2bab7b35c13-d449fd80-704c-4d7a-94b3-946fe063bc25-v1.png?transparent=1&palette=1" : "https://sdk.bitmoji.com/render/panel/3e2ad017-8c55-4d51-b242-c2c91bfa8551-d449fd80-704c-4d7a-94b3-946fe063bc25-v1.png?transparent=1&palette=1"}" style="width: 80px; margin-left: 10px;">
-                   </div>`;
+        const imgSrc = isWin 
+          ? "https://i.ibb.co/5gNjxgKw/db24c795-e74a-4c0d-96f3-a2bab7b35c13-d449fd80-704c-4d7a-94b3-946fe063bc25-v1.png" 
+          : "https://i.ibb.co/8DGLL7bT/No.png";
+        content = `<div style="display: flex; flex-direction: column; align-items: center;">
+                      <h3>${title}</h3>
+                      <div style="display: flex; align-items: center;">
+                        <div>${infoText}</div>
+                        <img src="${imgSrc}?transparent=1&palette=1" style="width: 85px; margin-left: 10px;">
+                      </div>
+                    </div>`;
       }
-      // Création du bouton d'action dans la modale
+      // Création du bouton d'action centré dans la modale
       const modalButton = document.createElement("button");
       modalButton.id = "modal-button";
       modalButton.textContent = isWin ? "Partie suivante" : "Recommencer";
@@ -428,7 +447,6 @@
       setTimeout(() => {
         const isWin = (currentGuess === solutionWord);
         if (isWin) {
-          messageElem.textContent = "Bravo ! Vous avez trouvé le verbe.";
           gameOver = true;
           currentStreak++;
           if (currentStreak > bestStreak) {
@@ -438,7 +456,6 @@
         } else {
           currentRow++;
           if (currentRow >= guessLimit) {
-            messageElem.textContent = "Perdu ! Le verbe était : " + solutionWord;
             gameOver = true;
             currentStreak = 0;
           }
