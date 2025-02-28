@@ -85,7 +85,7 @@
       color: white;
       border: none;
     }
-    /* On ne fait plus apparaître de message externe */
+    /* Aucun message externe */
     #message {
       font-size: 20px;
       font-weight: bold;
@@ -109,7 +109,7 @@
       text-align: left;
       font-size: 16px;
     }
-    /* Bouton dans la modale centré */
+    /* Bouton centré dans la modale */
     #modal-button {
       display: block;
       margin: 15px auto 0 auto;
@@ -124,7 +124,7 @@
       background-color: rgba(255, 255, 255, 0.8);
       padding: 10px;
       border-radius: 8px;
-      margin-top: 10px; /* Position remontée */
+      margin-top: 10px;
     }
     .keyboard-row {
       display: flex;
@@ -189,13 +189,13 @@
   <div id="board-container">
     <div id="board"></div>
   </div>
-  <!-- Le clavier est maintenant directement sous la grille -->
+  <!-- Clavier virtuel placé directement sous la grille -->
   <div id="virtual-keyboard">
     <div class="keyboard-row" id="row1"></div>
     <div class="keyboard-row" id="row2"></div>
     <div class="keyboard-row" id="row3"></div>
   </div>
-  <!-- Message externe (actuellement vide) -->
+  <!-- Aucun message externe -->
   <div id="message"></div>
   <footer>
     <p>Projet réalisé par F. Bertin, du collège Jean Moulin</p>
@@ -342,8 +342,7 @@
       return verbs[randIndex];
     }
 
-    // Affiche la fenêtre modale dans le conteneur de la grille,
-    // avec un titre en fonction du résultat, le contenu d'information et le bouton d'action centré.
+    // Affiche la modale avec le titre, les infos du verbe, l'image et le bouton d'action
     function displayVerbInfo(isWin) {
       const boardContainer = document.getElementById("board-container");
       const infoContainer = document.createElement("div");
@@ -369,7 +368,7 @@
                       </div>
                     </div>`;
       }
-      // Création du bouton d'action centré dans la modale
+      // Bouton d'action centré dans la modale
       const modalButton = document.createElement("button");
       modalButton.id = "modal-button";
       modalButton.textContent = isWin ? "Partie suivante" : "Recommencer";
@@ -380,6 +379,10 @@
       infoContainer.innerHTML = content;
       infoContainer.appendChild(modalButton);
       boardContainer.appendChild(infoContainer);
+      
+      // Lecture du son de fin de partie
+      const endSound = new Audio(isWin ? "success.mp3" : "fail.mp3");
+      endSound.play();
     }
 
     function initGame() {
@@ -442,6 +445,14 @@
           cell.classList.add("flip");
           cell.classList.add(evaluation[i]);
           updateKeyColor(cell.textContent, evaluation[i]);
+          // Jouer le son selon l'évaluation de la lettre
+          if(evaluation[i] === "absent"){
+            new Audio("bad.mp3").play();
+          } else if(evaluation[i] === "present"){
+            new Audio("moyen.mp3").play();
+          } else if(evaluation[i] === "correct"){
+            new Audio("good.mp3").play();
+          }
         }, i * 300);
       }
       setTimeout(() => {
