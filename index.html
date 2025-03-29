@@ -129,6 +129,15 @@
     }
     .key:hover { background-color: #ccc; }
     .key:active { transform: scale(0.95); }
+    /* Coloration spécifique pour Enter et Delete */
+    .key.enter {
+      background-color: green !important;
+      color: white;
+    }
+    .key.delete {
+      background-color: red !important;
+      color: white;
+    }
     /* Boutons généraux centrés */
     button.mode-btn, button.theme-btn, button.home-btn {
       padding: 10px 20px;
@@ -139,6 +148,14 @@
       display: block;
       margin-left: auto;
       margin-right: auto;
+    }
+    /* Bouton "Règles du jeu" sur la page d'accueil */
+    #rules-btn {
+      background-color: lightgray;
+    }
+    /* Bouton Accueil sur la page "Verbes par thèmes" coloré en bleu clair */
+    #theme-home-btn {
+      background-color: lightblue;
     }
     /* Conteneurs d'écran */
     .screen {
@@ -207,6 +224,8 @@
     <button class="mode-btn" id="chrono-btn">Mode Chronométré</button>
     <button class="mode-btn" id="theme-btn">Verbes par thèmes</button>
     <button class="mode-btn" id="revise-btn">Révise les verbes</button>
+    <!-- Nouveau bouton "Règles du jeu" -->
+    <button class="mode-btn" id="rules-btn" onclick="location.href='regles.html'">Règles du jeu</button>
   </div>
 
   <!-- Écran de jeu (utilisé pour Mode Classique, Chrono et Thèmes) -->
@@ -252,8 +271,8 @@
     <button class="theme-btn" data-theme="iau">Les I / A / U</button>
     <button class="theme-btn" data-theme="ear_ore_orn">Les EAR / ORE / ORN</button>
     <button class="theme-btn" data-theme="ew">Les Preterits en EW</button>
-    <!-- Bouton Accueil -->
-    <button class="home-btn" id="theme-home-btn">Accueil</button>
+    <!-- Bouton Accueil coloré en bleu clair -->
+    <button class="home-btn" id="theme-home-btn" style="background-color: lightblue;">Accueil</button>
   </div>
 
   <!-- Écran de révision (affiche la liste des verbes par catégories) -->
@@ -573,9 +592,8 @@
       const data = verbData[currentChosenVerb];
       let content = "";
       let title = isWin ? "Well Done !" : "Oh Nooo !";
-      // Choix de l'image selon le résultat
       const imgUrl = isWin 
-        ? "https://i.ibb.co/5gNjxgKw/db24c795-e74a-4c0d-96f3-a2bab7b35c13-d449fd80-704c-4d7a-94b3-946fe063bc25-v1.png" 
+        ? "https://i.ibb.co/5gNjxgKw/db24c795-e74a-4c0d-96f3-a2bab7b35c13-d449fd80-704c-4d7a-94b3-946fe063bc25-v1.png"
         : "https://i.ibb.co/8DGLL7bT/No.png";
       if (!data) {
         content = "<p>Données non disponibles pour ce verbe.</p>";
@@ -619,6 +637,12 @@
           const keyButton = document.createElement("button");
           keyButton.textContent = key;
           keyButton.classList.add("key");
+          if(key.toUpperCase() === "ENTER") {
+            keyButton.classList.add("enter");
+          }
+          if(key.toUpperCase() === "DELETE") {
+            keyButton.classList.add("delete");
+          }
           keyButton.addEventListener("click", () => handleKey(key));
           rowElem.appendChild(keyButton);
         });
@@ -677,6 +701,8 @@
     /***** Gestion des boutons Accueil *****/
     function goHome() {
       if (currentMode === "chrono") stopTimer();
+      const modal = document.getElementById("verb-info");
+      if (modal) modal.remove();
       showScreen("home-screen");
     }
 
@@ -684,7 +710,6 @@
     function startClassicGame() {
       currentMode = "classic";
       document.getElementById("game-title").textContent = "Mode Classique";
-      // En mode classique, masquer le timer
       timerBox.style.display = "none";
       currentVerbs = classicVerbs;
       initGame();
@@ -695,7 +720,6 @@
     function startChronoGame() {
       currentMode = "chrono";
       document.getElementById("game-title").textContent = "Mode Chronométré";
-      // En mode chronométré, afficher le timer
       timerBox.style.display = "block";
       currentVerbs = classicVerbs;
       initGame();
@@ -730,7 +754,6 @@
         alert("Aucun verbe pour ce thème.");
         return;
       }
-      // Pour les thèmes, si le mode n'est pas chronométré, on masque le timer
       timerBox.style.display = "none";
       initGame();
       createKeyboard();
@@ -740,8 +763,6 @@
     function startRevision() {
       const revisionList = document.getElementById("revision-list");
       revisionList.innerHTML = "";
-      // Pour chaque thème, afficher chaque verbe sur une seule ligne au format :
-      // "BASE / PRÉTERIT / PARTICIPE : TRADUCTION"
       for (const [theme, verbs] of Object.entries({
         "Verbes Indispensables": themes.indispensables,
         "Ceux qui ne changent pas": themes.inchanges,
@@ -757,7 +778,6 @@
       })) {
         const section = document.createElement("div");
         section.style.marginBottom = "15px";
-        // Centrer l'intitulé du thème
         section.innerHTML = `<h3>${theme}</h3>`;
         verbs.forEach(v => {
           const data = verbData[v];
