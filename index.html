@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Irregular Wordle</title>
+  <title>IRREGULAR WORDLE</title>
   <style>
     body {
       font-family: sans-serif;
@@ -18,22 +18,37 @@
       text-align: center;
       margin: 10px;
     }
-    .legend {
+    /* Bloc d'instructions au-dessus de la grille */
+    #instructions {
       text-align: center;
-      margin: 3px;
-      padding: 3px;
-      font-weight: bold;
+      margin-bottom: 10px;
     }
-    #score-box {
+    #instructions p {
+      margin: 5px 0;
+    }
+    #instructions .legend {
+      display: inline-block;
+      padding: 4px 8px;
+      margin: 0 5px;
+      font-weight: bold;
+      border-radius: 4px;
+    }
+    #instructions .legend.green { background-color: Chartreuse; }
+    #instructions .legend.yellow { background-color: Khaki; }
+    #instructions .legend.gray { background-color: LightGray; }
+    /* Score et timer centrés */
+    #score-box, #timer-box {
       margin-bottom: 10px;
       font-size: 18px;
       font-weight: bold;
+      text-align: center;
     }
-    /* Conteneur de la grille */
+    /* Conteneur de la grille centré */
     #board-container {
       position: relative;
       width: 100%;
       max-width: 500px;
+      margin: 0 auto;
     }
     #board {
       display: flex;
@@ -85,46 +100,15 @@
       color: white;
       border: none;
     }
-    /* Aucun message externe */
-    #message {
-      font-size: 20px;
-      font-weight: bold;
-      margin-top: 20px;
-      margin-bottom: 15px;
-      min-height: 24px;
-      text-align: center;
-    }
-    /* Fenêtre modale dans #board-container */
-    #verb-info {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 10;
-      background-color: rgba(255,255,255,0.95);
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
-      max-width: 90%;
-      text-align: left;
-      font-size: 16px;
-    }
-    /* Bouton centré dans la modale */
-    #modal-button {
-      display: block;
-      margin: 15px auto 0 auto;
-      padding: 6px 12px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    /* Clavier virtuel en disposition AZERTY */
+    /* Clavier virtuel centré */
     #virtual-keyboard {
       width: 100%;
       max-width: 500px;
       background-color: rgba(255, 255, 255, 0.8);
       padding: 10px;
       border-radius: 8px;
-      margin-top: 10px;
+      margin: 10px auto;
+      text-align: center;
     }
     .keyboard-row {
       display: flex;
@@ -143,12 +127,59 @@
       user-select: none;
       transition: background-color 0.2s, transform 0.1s;
     }
-    .key:hover {
-      background-color: #ccc;
+    .key:hover { background-color: #ccc; }
+    .key:active { transform: scale(0.95); }
+    /* Boutons généraux centrés */
+    button.mode-btn, button.theme-btn, button.home-btn {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 6px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
     }
-    .key:active {
-      transform: scale(0.95);
+    /* Conteneurs d'écran */
+    .screen {
+      display: none;
+      width: 100%;
+      max-width: 600px;
     }
+    .visible { display: block; }
+    /* Modal : affichée au premier plan et remontée */
+    #verb-info {
+      position: fixed;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      background-color: rgba(255,255,255,0.95);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+      max-width: 90%;
+      text-align: left;
+      font-size: 16px;
+    }
+    /* Centrage du bouton dans la modale */
+    #verb-info button {
+      display: block;
+      margin: 15px auto 0 auto;
+      padding: 6px 12px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    /* Révision : centrer les titres de thèmes */
+    #revision-list h3 {
+      text-align: center;
+    }
+    footer {
+      text-align: center;
+      margin-top: 20px;
+    }
+    footer p { margin: 0 0 5px; font-size: 14px; }
+    /* Adaptation responsive */
     @media (max-width: 600px) {
       .cell {
         max-width: 30px;
@@ -164,159 +195,234 @@
       #verb-info {
         font-size: 14px;
       }
-      #modal-button {
-        font-size: 14px;
-      }
-    }
-    footer {
-      text-align: center;
-      margin-top: 20px;
-    }
-    footer p {
-      margin: 0 0 5px;
-      font-size: 14px;
     }
   </style>
 </head>
 <body>
-  <h1>Irregular Wordle</h1>
-  <h2>Tu n'as que 5 essais, alors réfléchis bien :</h2>
-  <p class="legend" style="background-color:Chartreuse;"><b>Lettre bien placée</b></p>
-  <p class="legend" style="background-color:Khaki;"><b>Lettre mal placée</b></p>
-  <p class="legend" style="background-color:LightGray;"><b>Lettre absente</b></p>
-  <div id="score-box">Meilleur série : 0 | Série actuelle : 0</div>
-  <!-- Conteneur de la grille -->
-  <div id="board-container">
-    <div id="board"></div>
+  <!-- Écran d'accueil -->
+  <div id="home-screen" class="screen visible">
+    <h1>IRREGULAR WORDLE</h1>
+    <p>Choisissez un mode :</p>
+    <button class="mode-btn" id="classic-btn">Mode Classique</button>
+    <button class="mode-btn" id="chrono-btn">Mode Chronométré</button>
+    <button class="mode-btn" id="theme-btn">Verbes par thèmes</button>
+    <button class="mode-btn" id="revise-btn">Révise les verbes</button>
   </div>
-  <!-- Clavier virtuel placé directement sous la grille -->
-  <div id="virtual-keyboard">
-    <div class="keyboard-row" id="row1"></div>
-    <div class="keyboard-row" id="row2"></div>
-    <div class="keyboard-row" id="row3"></div>
+
+  <!-- Écran de jeu (utilisé pour Mode Classique, Chrono et Thèmes) -->
+  <div id="game-screen" class="screen">
+    <!-- En mode thème, le titre inclura le nom du thème -->
+    <h2 id="game-title"></h2>
+    <!-- Bloc d'instructions -->
+    <div id="instructions">
+      <p style="font-size: 16px;">Tu n'as que 5 essais, alors réfléchis bien</p>
+      <div>
+        <span class="legend green"><strong>Lettre bien placée</strong></span>
+        <span class="legend yellow"><strong>Lettre mal placée</strong></span>
+        <span class="legend gray"><strong>Lettre absente</strong></span>
+      </div>
+    </div>
+    <div id="score-box">Meilleur série : 0 | Série actuelle : 0</div>
+    <!-- Le timer ne s'affiche qu'en mode Chronométré -->
+    <div id="timer-box">Temps restant : 05:00</div>
+    <div id="board-container">
+      <div id="board"></div>
+    </div>
+    <div id="virtual-keyboard">
+      <div class="keyboard-row" id="row1"></div>
+      <div class="keyboard-row" id="row2"></div>
+      <div class="keyboard-row" id="row3"></div>
+    </div>
+    <div id="message"></div>
+    <!-- Bouton Accueil centré sous le clavier -->
+    <button class="home-btn" id="game-home-btn">Accueil</button>
   </div>
-  <!-- Aucun message externe -->
-  <div id="message"></div>
+
+  <!-- Écran de sélection des thèmes -->
+  <div id="theme-screen" class="screen">
+    <h2>Choisissez un thème</h2>
+    <button class="theme-btn" data-theme="indispensables">Verbes Indispensables</button>
+    <button class="theme-btn" data-theme="inchanges">Ceux qui ne changent pas</button>
+    <button class="theme-btn" data-theme="t">Ceux qui aiment le T</button>
+    <button class="theme-btn" data-theme="preterit_past">Preterit = Participe Passé</button>
+    <button class="theme-btn" data-theme="ght">Les GHT</button>
+    <button class="theme-btn" data-theme="minusE">Ceux qui perdent un E</button>
+    <button class="theme-btn" data-theme="base_past">Base Verbale = Participe Passé</button>
+    <button class="theme-btn" data-theme="past_en">Les Participes Passés en EN</button>
+    <button class="theme-btn" data-theme="iau">Les I / A / U</button>
+    <button class="theme-btn" data-theme="ear_ore_orn">Les EAR / ORE / ORN</button>
+    <button class="theme-btn" data-theme="ew">Les Preterits en EW</button>
+    <!-- Bouton Accueil -->
+    <button class="home-btn" id="theme-home-btn">Accueil</button>
+  </div>
+
+  <!-- Écran de révision (affiche la liste des verbes par catégories) -->
+  <div id="revision-screen" class="screen">
+    <h2>Révision des verbes irréguliers</h2>
+    <div id="revision-list" style="max-height:400px; overflow-y:auto; background:rgba(255,255,255,0.9); padding:10px; border-radius:8px;">
+      <!-- Le contenu sera généré dynamiquement -->
+    </div>
+    <!-- Bouton Accueil -->
+    <button class="home-btn" id="revise-home-btn">Accueil</button>
+  </div>
+
+  <!-- Écran Time's Up pour le mode Chronométré -->
+  <div id="timeup-screen" class="screen">
+    <h2>Time's Up !</h2>
+    <p id="timeup-score"></p>
+    <button class="home-btn" id="timeup-home-btn">Accueil</button>
+  </div>
+
   <footer>
     <p>Projet réalisé par F. Bertin, du collège Jean Moulin</p>
-    <img src="https://i.ibb.co/BVQNGxTM/logo-Wordle2.png" alt="logo-Wordle2" border="0" style="max-width: 200px;">
+    <img src="https://i.ibb.co/BVQNGxTM/logo-Wordle2.png" alt="logo-Wordle2" style="max-width: 200px;">
   </footer>
+
   <script>
-    // Base de données de conjugaison et traduction pour l'ensemble des verbes
+    /***** Données de conjugaison *****/
     const verbData = {
+      "be":      { base: "be",    preterit: "was / were", past: "been",    translation: "être" },
+      "have":    { base: "have",  preterit: "had",      past: "had",     translation: "avoir" },
+      "do":      { base: "do",    preterit: "did",      past: "done",    translation: "faire" },
+      "make":    { base: "make",  preterit: "made",     past: "made",    translation: "fabriquer" },
+      "go":      { base: "go",    preterit: "went",     past: "gone",    translation: "aller" },
+      "get":     { base: "get",   preterit: "got",      past: "got",     translation: "obtenir" },
       "beat":      { base: "beat",    preterit: "beat",    past: "beaten",    translation: "battre" },
-      "became":    { base: "become",  preterit: "became",  past: "become",    translation: "devenir" },
-      "began":     { base: "begin",   preterit: "began",   past: "begun",     translation: "commencer" },
+      "become":    { base: "become",  preterit: "became",  past: "become",    translation: "devenir" },
+      "begin":     { base: "begin",   preterit: "began",   past: "begun",     translation: "commencer" },
       "bet":       { base: "bet",     preterit: "bet",     past: "bet",       translation: "parier" },
-      "bit":       { base: "bite",    preterit: "bit",     past: "bitten",    translation: "mordre" },
-      "bled":      { base: "bleed",   preterit: "bled",    past: "bled",      translation: "saigner" },
-      "broke":     { base: "break",   preterit: "broke",   past: "broken",    translation: "casser" },
-      "brought":   { base: "bring",   preterit: "brought", past: "brought",   translation: "apporter" },
-      "built":     { base: "build",   preterit: "built",   past: "built",     translation: "construire" },
-      "burnt":     { base: "burn",    preterit: "burnt",   past: "burnt",     translation: "brûler" },
-      "bought":    { base: "buy",     preterit: "bought",  past: "bought",    translation: "acheter" },
+      "bite":      { base: "bite",    preterit: "bit",     past: "bitten",    translation: "mordre" },
+      "bleed":     { base: "bleed",   preterit: "bled",    past: "bled",      translation: "saigner" },
+      "break":     { base: "break",   preterit: "broke",   past: "broken",    translation: "casser" },
+      "bring":     { base: "bring",   preterit: "brought", past: "brought",   translation: "apporter" },
+      "build":     { base: "build",   preterit: "built",   past: "built",     translation: "construire" },
+      "burn":      { base: "burn",    preterit: "burnt",   past: "burnt",     translation: "brûler" },
+      "buy":       { base: "buy",     preterit: "bought",  past: "bought",    translation: "acheter" },
       "cast":      { base: "cast",    preterit: "cast",    past: "cast",      translation: "jeter" },
-      "caught":    { base: "catch",   preterit: "caught",  past: "caught",    translation: "attraper" },
-      "chose":     { base: "choose",  preterit: "chose",   past: "chosen",    translation: "choisir" },
-      "came":      { base: "come",    preterit: "came",    past: "come",      translation: "venir" },
+      "catch":     { base: "catch",   preterit: "caught",  past: "caught",    translation: "attraper" },
+      "choose":    { base: "choose",  preterit: "chose",   past: "chosen",    translation: "choisir" },
+      "come":      { base: "come",    preterit: "came",    past: "come",      translation: "venir" },
       "cost":      { base: "cost",    preterit: "cost",    past: "cost",      translation: "coûter" },
       "cut":       { base: "cut",     preterit: "cut",     past: "cut",       translation: "couper" },
-      "did":       { base: "do",      preterit: "did",     past: "done",      translation: "faire" },
-      "drew":      { base: "draw",    preterit: "drew",    past: "drawn",     translation: "dessiner" },
-      "dreamt":    { base: "dream",   preterit: "dreamt",  past: "dreamt",    translation: "rêver" },
-      "drank":     { base: "drink",   preterit: "drank",   past: "drunk",     translation: "boire" },
-      "drove":     { base: "drive",   preterit: "drove",   past: "driven",    translation: "conduire" },
-      "ate":       { base: "eat",     preterit: "ate",     past: "eaten",     translation: "manger" },
-      "fell":      { base: "fall",    preterit: "fell",    past: "fallen",    translation: "tomber" },
-      "fed":       { base: "feed",    preterit: "fed",     past: "fed",       translation: "nourrir" },
-      "felt":      { base: "feel",    preterit: "felt",    past: "felt",      translation: "sentir" },
-      "fought":    { base: "fight",   preterit: "fought",  past: "fought",    translation: "combattre" },
-      "found":     { base: "find",    preterit: "found",   past: "found",     translation: "trouver" },
-      "flew":      { base: "fly",     preterit: "flew",    past: "flown",     translation: "voler" },
-      "forbade":   { base: "forbid",  preterit: "forbade", past: "forbidden", translation: "interdire" },
-      "forgot":    { base: "forget",  preterit: "forgot",  past: "forgotten", translation: "oublier" },
-      "forgave":   { base: "forgive", preterit: "forgave", past: "forgiven",  translation: "pardonner" },
-      "got":       { base: "get",     preterit: "got",     past: "gotten",    translation: "obtenir" },
-      "gave":      { base: "give",    preterit: "gave",    past: "given",     translation: "donner" },
-      "went":      { base: "go",      preterit: "went",    past: "gone",      translation: "aller" },
-      "grew":      { base: "grow",    preterit: "grew",    past: "grown",     translation: "grandir" },
-      "hung":      { base: "hang",    preterit: "hung",    past: "hung",      translation: "pendre" },
-      "had":       { base: "have",    preterit: "had",     past: "had",       translation: "avoir" },
-      "heard":     { base: "hear",    preterit: "heard",   past: "heard",     translation: "entendre" },
-      "hid":       { base: "hide",    preterit: "hid",     past: "hidden",    translation: "cacher" },
+      "draw":      { base: "draw",    preterit: "drew",    past: "drawn",     translation: "dessiner" },
+      "dream":     { base: "dream",   preterit: "dreamt",  past: "dreamt",    translation: "rêver" },
+      "drink":     { base: "drink",   preterit: "drank",   past: "drunk",     translation: "boire" },
+      "drive":     { base: "drive",   preterit: "drove",   past: "driven",    translation: "conduire" },
+      "eat":       { base: "eat",     preterit: "ate",     past: "eaten",     translation: "manger" },
+      "fall":      { base: "fall",    preterit: "fell",    past: "fallen",    translation: "tomber" },
+      "feed":      { base: "feed",    preterit: "fed",     past: "fed",       translation: "nourrir" },
+      "feel":      { base: "feel",    preterit: "felt",    past: "felt",      translation: "sentir" },
+      "fight":     { base: "fight",   preterit: "fought",  past: "fought",    translation: "combattre" },
+      "find":      { base: "find",    preterit: "found",   past: "found",     translation: "trouver" },
+      "fly":       { base: "fly",     preterit: "flew",    past: "flown",     translation: "voler" },
+      "forbid":    { base: "forbid",  preterit: "forbade", past: "forbidden", translation: "interdire" },
+      "forget":    { base: "forget",  preterit: "forgot",  past: "forgotten", translation: "oublier" },
+      "forgive":   { base: "forgive", preterit: "forgave", past: "forgiven",  translation: "pardonner" },
+      "hang":      { base: "hang",    preterit: "hung",    past: "hung",      translation: "pendre" },
+      "hear":      { base: "hear",    preterit: "heard",   past: "heard",     translation: "entendre" },
+      "hide":      { base: "hide",    preterit: "hid",     past: "hidden",    translation: "cacher" },
       "hit":       { base: "hit",     preterit: "hit",     past: "hit",       translation: "frapper" },
-      "held":      { base: "hold",    preterit: "held",    past: "held",      translation: "tenir" },
+      "hold":      { base: "hold",    preterit: "held",    past: "held",      translation: "tenir" },
       "hurt":      { base: "hurt",    preterit: "hurt",    past: "hurt",      translation: "blesser" },
-      "kept":      { base: "keep",    preterit: "kept",    past: "kept",      translation: "garder" },
-      "knew":      { base: "know",    preterit: "knew",    past: "known",     translation: "savoir" },
-      "learnt":    { base: "learn",   preterit: "learnt",  past: "learnt",    translation: "apprendre" },
-      "left":      { base: "leave",   preterit: "left",    past: "left",      translation: "quitter" },
+      "keep":      { base: "keep",    preterit: "kept",    past: "kept",      translation: "garder" },
+      "know":      { base: "know",    preterit: "knew",    past: "known",     translation: "savoir" },
+      "learn":     { base: "learn",   preterit: "learnt",  past: "learnt",    translation: "apprendre" },
+      "leave":     { base: "leave",   preterit: "left",    past: "left",      translation: "quitter" },
       "let":       { base: "let",     preterit: "let",     past: "let",       translation: "laisser" },
-      "lost":      { base: "lose",    preterit: "lost",    past: "lost",      translation: "perdre" },
-      "made":      { base: "make",    preterit: "made",    past: "made",      translation: "fabriquer" },
-      "meant":     { base: "mean",    preterit: "meant",   past: "meant",     translation: "vouloir dire" },
-      "met":       { base: "meet",    preterit: "met",     past: "met",       translation: "rencontrer" },
-      "paid":      { base: "pay",     preterit: "paid",    past: "paid",      translation: "payer" },
-      "put":       { base: "put",     preterit: "put",     past: "put",       translation: "mettre" },
-      "read":      { base: "read",    preterit: "read",    past: "read",      translation: "lire" },
-      "rose":      { base: "rise",    preterit: "rose",    past: "risen",     translation: "se lever" },
-      "ran":       { base: "run",     preterit: "ran",     past: "run",       translation: "courir" },
-      "said":      { base: "say",     preterit: "said",    past: "said",      translation: "dire" },
-      "saw":       { base: "see",     preterit: "saw",     past: "seen",      translation: "voir" },
-      "sold":      { base: "sell",    preterit: "sold",    past: "sold",      translation: "vendre" },
-      "sent":      { base: "send",    preterit: "sent",    past: "sent",      translation: "envoyer" },
-      "shot":      { base: "shoot",   preterit: "shot",    past: "shot",      translation: "tirer" },
-      "showed":    { base: "show",    preterit: "showed",  past: "shown",     translation: "montrer" },
+      "lose":      { base: "lose",    preterit: "lost",    past: "lost",      translation: "perdre" },
+      "overcome":  { base: "overcome", preterit: "overcame", past: "overcome", translation: "surmonter" },
+      "run":       { base: "run",     preterit: "ran",     past: "run",       translation: "courir" },
+      "say":       { base: "say",     preterit: "said",    past: "said",      translation: "dire" },
+      "see":       { base: "see",     preterit: "saw",     past: "seen",      translation: "voir" },
+      "sell":      { base: "sell",    preterit: "sold",    past: "sold",      translation: "vendre" },
+      "send":      { base: "send",    preterit: "sent",    past: "sent",      translation: "envoyer" },
+      "shoot":     { base: "shoot",   preterit: "shot",    past: "shot",      translation: "tirer" },
+      "show":      { base: "show",    preterit: "showed",  past: "shown",     translation: "montrer" },
       "shut":      { base: "shut",    preterit: "shut",    past: "shut",      translation: "fermer" },
-      "sang":      { base: "sing",    preterit: "sang",    past: "sung",      translation: "chanter" },
-      "sat":       { base: "sit",     preterit: "sat",     past: "sat",       translation: "s'asseoir" },
-      "slept":     { base: "sleep",   preterit: "slept",   past: "slept",     translation: "dormir" },
-      "smelt":     { base: "smell",   preterit: "smelt",   past: "smelt",     translation: "sentir (odeur)" },
-      "spoke":     { base: "speak",   preterit: "spoke",   past: "spoken",    translation: "parler" },
-      "spent":     { base: "spend",   preterit: "spent",   past: "spent",     translation: "dépenser" },
-      "stole":     { base: "steal",   preterit: "stole",   past: "stolen",    translation: "voler (dérober)" },
-      "swam":      { base: "swim",    preterit: "swam",    past: "swum",      translation: "nager" },
-      "took":      { base: "take",    preterit: "took",    past: "taken",     translation: "prendre" },
-      "taught":    { base: "teach",   preterit: "taught",  past: "taught",    translation: "enseigner" },
-      "tore":      { base: "tear",    preterit: "tore",    past: "torn",      translation: "déchirer" },
-      "told":      { base: "tell",    preterit: "told",    past: "told",      translation: "raconter" },
-      "thought":   { base: "think",   preterit: "thought", past: "thought",   translation: "penser" },
-      "threw":     { base: "throw",   preterit: "threw",   past: "thrown",    translation: "jeter" },
-      "understood":{ base: "understand", preterit: "understood", past: "understood", translation: "comprendre" },
-      "woke":      { base: "wake",    preterit: "woke",    past: "woken",     translation: "se réveiller" },
-      "won":       { base: "win",     preterit: "won",     past: "won",       translation: "gagner" },
-      "wrote":     { base: "write",   preterit: "wrote",   past: "written",   translation: "écrire" },
-      "was":       { base: "be",      preterit: "was",     past: "been",      translation: "être" },
-      "were":      { base: "be",      preterit: "were",    past: "been",      translation: "être" }
+      "sing":      { base: "sing",    preterit: "sang",    past: "sung",      translation: "chanter" },
+      "sit":       { base: "sit",     preterit: "sat",     past: "sat",       translation: "s’asseoir" },
+      "sleep":     { base: "sleep",   preterit: "slept",   past: "slept",     translation: "dormir" },
+      "smell":     { base: "smell",   preterit: "smelt",   past: "smelt",     translation: "sentir (odeur)" },
+      "speak":     { base: "speak",   preterit: "spoke",   past: "spoken",    translation: "parler" },
+      "spend":     { base: "spend",   preterit: "spent",   past: "spent",     translation: "dépenser" },
+      "steal":     { base: "steal",   preterit: "stole",   past: "stolen",    translation: "voler (dérober)" },
+      "swim":      { base: "swim",    preterit: "swam",    past: "swum",      translation: "nager" },
+      "take":      { base: "take",    preterit: "took",    past: "taken",     translation: "prendre" },
+      "teach":     { base: "teach",   preterit: "taught",  past: "taught",    translation: "enseigner" },
+      "tear":      { base: "tear",    preterit: "tore",    past: "torn",      translation: "déchirer" },
+      "tell":      { base: "tell",    preterit: "told",    past: "told",      translation: "raconter" },
+      "think":     { base: "think",   preterit: "thought", past: "thought",   translation: "penser" },
+      "throw":     { base: "throw",   preterit: "threw",   past: "thrown",    translation: "jeter" },
+      "understand":{ base: "understand", preterit: "understood", past: "understood", translation: "comprendre" },
+      "wake":      { base: "wake",    preterit: "woke",    past: "woken",     translation: "se réveiller" },
+      "win":       { base: "win",     preterit: "won",     past: "won",       translation: "gagner" },
+      "write":     { base: "write",   preterit: "wrote",   past: "written",   translation: "écrire" },
+      /* Ajouts pour le thème EAR / ORE / ORN */
+      "bear":     { base: "bear",    preterit: "bore",    past: "born",    translation: "supporter" },
+      "swear":    { base: "swear",   preterit: "swore",   past: "sworn",   translation: "jurer" },
+      "wear":     { base: "wear",    preterit: "wore",    past: "worn",    translation: "porter (habits)" }
     };
 
-    // Liste des verbes du jeu
-    const verbs = [
-      "beat", "became", "began", "bet", "bit", "bled", "broke", "brought",
-      "built", "burnt", "bought", "cast", "caught", "chose", "came", "cost",
-      "cut", "did", "drew", "dreamt", "drank", "drove", "ate", "fell", "fed",
-      "felt", "fought", "found", "flew", "forbade", "forgot", "forgave", "got",
-      "gave", "went", "grew", "hung", "had", "heard", "hid", "hit", "held", "hurt",
-      "kept", "knew", "learnt", "left", "let", "lost", "made", "meant", "met", "paid",
-      "put", "read", "rose", "ran", "said", "saw", "sold", "sent", "shot", "showed",
-      "shut", "sang", "sat", "slept", "smelt", "spoke", "spent", "stole", "swam",
-      "took", "taught", "tore", "told", "thought", "threw", "understood", "woke",
-      "won", "wrote", "was", "were"
+    /***** Listes de verbes pour chaque mode *****/
+    const classicVerbs = [
+      "be", "have", "do", "make", "go", "get",
+      "beat", "become", "begin", "bet", "bite", "bleed", "break", "bring", "build", "burn", "buy", "cast", "catch", "choose", "come", "cost", "cut", "draw", "dream", "drink", "drive", "eat", "fall", "feed", "feel", "fight", "find", "fly", "forbid", "forget", "forgive", "hang", "hear", "hide", "hit", "hold", "hurt", "keep", "know", "learn", "leave", "let", "lose", "overcome", "run", "say", "see", "sell", "send", "shoot", "show", "shut", "sing", "sit", "sleep", "smell", "speak", "spend", "steal", "swim", "take", "teach", "tear", "tell", "think", "throw", "understand", "wake", "win", "write"
     ];
 
+    const themes = {
+      indispensables: ["be", "have", "do", "make", "go", "get"],
+      inchanges: ["cut", "bet", "let", "hurt", "put", "shut", "burst", "hit", "cost", "spread", "read", "quit"],
+      t: ["burn", "build", "send", "spend", "learn", "lend", "shoot", "lose", "sit"],
+      preterit_past: ["find", "hear", "lay", "pay", "say", "sell", "tell", "stand", "understand", "win", "mean", "dream"],
+      ght: ["buy", "bring", "fight", "think", "catch", "teach"],
+      minusE: ["bleed", "feed", "feel", "keep", "meet", "sleep", "lead", "leave"],
+      base_past: ["become", "come", "overcome", "run"],
+      past_en: ["beat", "bite", "choose", "eat", "drive", "fall", "forbid", "forget", "forgive", "freeze", "give", "hide", "speak", "steal", "ride", "write"],
+      iau: ["begin", "drink", "ring", "sing", "swim"],
+      ear_ore_orn: ["bear", "swear", "tear", "wear"],
+      ew: ["draw", "blow", "fly", "grow", "know", "throw"]
+    };
+
+    let currentVerbs = [];
+    let currentChosenVerb = "";
+
+    /***** Variables globales du jeu *****/
     const guessLimit = 5;
     let solutionWord = "";
     let currentRow = 0;
     let gameOver = false;
     let currentGuess = "";
     let gameStartTime = 0;
-
     let currentStreak = 0;
     let bestStreak = localStorage.getItem("bestStreak") ? parseInt(localStorage.getItem("bestStreak")) : 0;
+    let timerInterval = null;
+    let remainingTime = 300;
+    let currentMode = "";
+    let currentThemeName = "";
 
+    const scoreBox = document.getElementById("score-box");
+    const timerBox = document.getElementById("timer-box");
     const boardElem = document.getElementById("board");
     const messageElem = document.getElementById("message");
-    const scoreBox = document.getElementById("score-box");
+
+    const keyboardLayout = [
+      ["A", "Z", "E", "R", "T", "Y", "U", "I", "O", "P"],
+      ["Q", "S", "D", "F", "G", "H", "J", "K", "L", "M"],
+      ["Delete", "W", "X", "C", "V", "B", "N", "Enter"]
+    ];
+
+    /***** Fonctions d'affichage des écrans *****/
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('visible'));
+      document.getElementById(screenId).classList.add('visible');
+    }
+
+    /***** Initialisation et création du jeu *****/
+    function chooseSolution() {
+      const randIndex = Math.floor(Math.random() * currentVerbs.length);
+      currentChosenVerb = currentVerbs[randIndex];
+      return verbData[currentChosenVerb].preterit;
+    }
 
     function createBoard() {
       boardElem.innerHTML = "";
@@ -337,54 +443,6 @@
       scoreBox.textContent = "Meilleur série : " + bestStreak + " | Série actuelle : " + currentStreak;
     }
 
-    function chooseSolution() {
-      const randIndex = Math.floor(Math.random() * verbs.length);
-      return verbs[randIndex];
-    }
-
-    // Affiche la modale avec le titre, les infos du verbe, l'image et le bouton d'action
-    function displayVerbInfo(isWin) {
-      const boardContainer = document.getElementById("board-container");
-      const infoContainer = document.createElement("div");
-      infoContainer.id = "verb-info";
-      const data = verbData[solutionWord];
-      let content = "";
-      let title = isWin ? "Well Done !" : "Oh Nooo !";
-      if (!data) {
-        content = "<p>Données non disponibles pour ce verbe.</p>";
-      } else {
-        const infoText = "<p><strong>Base verbale :</strong> " + data.base + "</p>" +
-                         "<p><strong>Prétérit :</strong> " + data.preterit + "</p>" +
-                         "<p><strong>Participe passé :</strong> " + data.past + "</p>" +
-                         "<p><strong>Traduction :</strong> " + data.translation + "</p>";
-        const imgSrc = isWin 
-          ? "https://i.ibb.co/5gNjxgKw/db24c795-e74a-4c0d-96f3-a2bab7b35c13-d449fd80-704c-4d7a-94b3-946fe063bc25-v1.png" 
-          : "https://i.ibb.co/8DGLL7bT/No.png";
-        content = `<div style="display: flex; flex-direction: column; align-items: center;">
-                      <h3>${title}</h3>
-                      <div style="display: flex; align-items: center;">
-                        <div>${infoText}</div>
-                        <img src="${imgSrc}?transparent=1&palette=1" style="width: 85px; margin-left: 10px;">
-                      </div>
-                    </div>`;
-      }
-      // Bouton d'action centré dans la modale
-      const modalButton = document.createElement("button");
-      modalButton.id = "modal-button";
-      modalButton.textContent = isWin ? "Partie suivante" : "Recommencer";
-      modalButton.addEventListener("click", () => {
-        infoContainer.remove();
-        initGame();
-      });
-      infoContainer.innerHTML = content;
-      infoContainer.appendChild(modalButton);
-      boardContainer.appendChild(infoContainer);
-      
-      // Lecture du son de fin de partie
-      const endSound = new Audio(isWin ? "success.mp3" : "fail.mp3");
-      endSound.play();
-    }
-
     function initGame() {
       const oldInfo = document.getElementById("verb-info");
       if (oldInfo) oldInfo.remove();
@@ -398,9 +456,40 @@
       clearKeyboardColors();
       enableKeyboard();
       gameStartTime = Date.now();
-      console.log("Mot à trouver :", solutionWord);
+      console.log("Mot à trouver (Prétérit) :", solutionWord);
     }
 
+    /***** Chronomètre pour le mode Chronométré *****/
+    function startTimer() {
+      remainingTime = 300;
+      timerBox.textContent = "Temps restant : " + formatTime(remainingTime);
+      timerInterval = setInterval(() => {
+        remainingTime--;
+        timerBox.textContent = "Temps restant : " + formatTime(remainingTime);
+        if (remainingTime <= 0) {
+          clearInterval(timerInterval);
+          gameOver = true;
+          displayTimeUp();
+        }
+      }, 1000);
+    }
+    function stopTimer() {
+      clearInterval(timerInterval);
+      timerBox.textContent = "";
+    }
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return m.toString().padStart(2, '0') + ":" + s.toString().padStart(2, '0');
+    }
+
+    /***** Écran Time's Up *****/
+    function displayTimeUp() {
+      document.getElementById("timeup-score").textContent = "Score final : " + currentStreak;
+      showScreen("timeup-screen");
+    }
+
+    /***** Gestion de l'évaluation des propositions *****/
     function evaluateGuess(guess, solution) {
       const result = Array(guess.length).fill("absent");
       const solutionLetterCount = {};
@@ -445,12 +534,11 @@
           cell.classList.add("flip");
           cell.classList.add(evaluation[i]);
           updateKeyColor(cell.textContent, evaluation[i]);
-          // Jouer le son selon l'évaluation de la lettre
-          if(evaluation[i] === "absent"){
+          if (evaluation[i] === "absent") {
             new Audio("bad.mp3").play();
-          } else if(evaluation[i] === "present"){
+          } else if (evaluation[i] === "present") {
             new Audio("moyen.mp3").play();
-          } else if(evaluation[i] === "correct"){
+          } else if (evaluation[i] === "correct") {
             new Audio("good.mp3").play();
           }
         }, i * 300);
@@ -478,13 +566,53 @@
       }, evaluation.length * 300 + 300);
     }
 
-    const keyboardLayout = [
-      ["A", "Z", "E", "R", "T", "Y", "U", "I", "O", "P"],
-      ["Q", "S", "D", "F", "G", "H", "J", "K", "L", "M"],
-      ["Delete", "W", "X", "C", "V", "B", "N", "Enter"]
-    ];
+    /***** Affichage de la modale de fin de manche *****/
+    function displayVerbInfo(isWin) {
+      const infoContainer = document.createElement("div");
+      infoContainer.id = "verb-info";
+      const data = verbData[currentChosenVerb];
+      let content = "";
+      let title = isWin ? "Well Done !" : "Oh Nooo !";
+      // Choix de l'image selon le résultat
+      const imgUrl = isWin 
+        ? "https://i.ibb.co/5gNjxgKw/db24c795-e74a-4c0d-96f3-a2bab7b35c13-d449fd80-704c-4d7a-94b3-946fe063bc25-v1.png" 
+        : "https://i.ibb.co/8DGLL7bT/No.png";
+      if (!data) {
+        content = "<p>Données non disponibles pour ce verbe.</p>";
+      } else {
+        content = `<p><strong>Base Verbale :</strong> ${data.base.toUpperCase()}</p>
+                   <p><strong>Prétérit :</strong> ${data.preterit.toUpperCase()}</p>
+                   <p><strong>Participe Passé :</strong> ${data.past.toUpperCase()}</p>
+                   <p><strong>Traduction :</strong> ${data.translation.toUpperCase()}</p>`;
+      }
+      const modalButton = document.createElement("button");
+      modalButton.id = "modal-button";
+      modalButton.textContent = isWin ? "Partie suivante" : "Recommencer";
+      modalButton.addEventListener("click", () => {
+        infoContainer.remove();
+        initGame();
+      });
+      infoContainer.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center;">
+          <div style="flex: 1; text-align: center;">
+            <h3>${title}</h3>
+            ${content}
+          </div>
+          <div>
+            <img src="${imgUrl}" style="width:85px; margin-left:10px;">
+          </div>
+        </div>`;
+      infoContainer.appendChild(modalButton);
+      document.body.appendChild(infoContainer);
+      const endSound = new Audio(isWin ? "success.mp3" : "fail.mp3");
+      endSound.play();
+    }
 
+    /***** Clavier virtuel *****/
     function createKeyboard() {
+      ["row1", "row2", "row3"].forEach(rowId => {
+        document.getElementById(rowId).innerHTML = "";
+      });
       keyboardLayout.forEach((row, rowIndex) => {
         const rowElem = document.getElementById("row" + (rowIndex + 1));
         row.forEach(key => {
@@ -517,11 +645,9 @@
     function disableKeyboard() {
       document.querySelectorAll(".key").forEach(key => key.disabled = true);
     }
-
     function enableKeyboard() {
       document.querySelectorAll(".key").forEach(key => key.disabled = false);
     }
-
     function updateKeyColor(letter, status) {
       document.querySelectorAll(".key").forEach(key => {
         if (key.textContent.toLowerCase() === letter) {
@@ -532,15 +658,14 @@
             key.style.backgroundColor = "#c9b458";
             key.style.color = "white";
           } else if (status === "absent" &&
-                    key.style.backgroundColor !== "rgb(106, 170, 100)" &&
-                    key.style.backgroundColor !== "rgb(201, 180, 88)") {
+                     key.style.backgroundColor !== "rgb(106, 170, 100)" &&
+                     key.style.backgroundColor !== "rgb(201, 180, 88)") {
             key.style.backgroundColor = "#787c7e";
             key.style.color = "white";
           }
         }
       });
     }
-
     function clearKeyboardColors() {
       document.querySelectorAll(".key").forEach(key => {
         key.style.backgroundColor = "";
@@ -549,9 +674,119 @@
       enableKeyboard();
     }
 
-    createKeyboard();
-    updateScoreBox();
-    initGame();
+    /***** Gestion des boutons Accueil *****/
+    function goHome() {
+      if (currentMode === "chrono") stopTimer();
+      showScreen("home-screen");
+    }
+
+    /***** Gestion des différents modes *****/
+    function startClassicGame() {
+      currentMode = "classic";
+      document.getElementById("game-title").textContent = "Mode Classique";
+      // En mode classique, masquer le timer
+      timerBox.style.display = "none";
+      currentVerbs = classicVerbs;
+      initGame();
+      createKeyboard();
+      showScreen("game-screen");
+    }
+
+    function startChronoGame() {
+      currentMode = "chrono";
+      document.getElementById("game-title").textContent = "Mode Chronométré";
+      // En mode chronométré, afficher le timer
+      timerBox.style.display = "block";
+      currentVerbs = classicVerbs;
+      initGame();
+      createKeyboard();
+      startTimer();
+      showScreen("game-screen");
+    }
+
+    function startThemeSelection() {
+      showScreen("theme-screen");
+    }
+
+    function startThemeGame(themeKey) {
+      currentMode = "theme";
+      const themeNames = {
+        indispensables: "Verbes Indispensables",
+        inchanges: "Ceux qui ne changent pas",
+        t: "Ceux qui aiment le T",
+        preterit_past: "Preterit = Participe Passé",
+        ght: "Les GHT",
+        minusE: "Ceux qui perdent un E",
+        base_past: "Base Verbale = Participe Passé",
+        past_en: "Les Participes Passés en EN",
+        iau: "Les I / A / U",
+        ear_ore_orn: "Les EAR / ORE / ORN",
+        ew: "Les Preterits en EW"
+      };
+      currentThemeName = themeNames[themeKey] || "Thème sélectionné";
+      document.getElementById("game-title").textContent = currentThemeName;
+      currentVerbs = themes[themeKey] || [];
+      if (currentVerbs.length === 0) {
+        alert("Aucun verbe pour ce thème.");
+        return;
+      }
+      // Pour les thèmes, si le mode n'est pas chronométré, on masque le timer
+      timerBox.style.display = "none";
+      initGame();
+      createKeyboard();
+      showScreen("game-screen");
+    }
+
+    function startRevision() {
+      const revisionList = document.getElementById("revision-list");
+      revisionList.innerHTML = "";
+      // Pour chaque thème, afficher chaque verbe sur une seule ligne au format :
+      // "BASE / PRÉTERIT / PARTICIPE : TRADUCTION"
+      for (const [theme, verbs] of Object.entries({
+        "Verbes Indispensables": themes.indispensables,
+        "Ceux qui ne changent pas": themes.inchanges,
+        "Ceux qui aiment le T": themes.t,
+        "Preterit = Participe Passé": themes.preterit_past,
+        "Les GHT": themes.ght,
+        "Ceux qui perdent un E": themes.minusE,
+        "Base Verbale = Participe Passé": themes.base_past,
+        "Les Participes Passés en EN": themes.past_en,
+        "Les I / A / U": themes.iau,
+        "Les EAR / ORE / ORN": themes.ear_ore_orn,
+        "Les Preterits en EW": themes.ew
+      })) {
+        const section = document.createElement("div");
+        section.style.marginBottom = "15px";
+        // Centrer l'intitulé du thème
+        section.innerHTML = `<h3>${theme}</h3>`;
+        verbs.forEach(v => {
+          const data = verbData[v];
+          if (data) {
+            section.innerHTML += `<p>${data.base.toUpperCase()} / ${data.preterit.toUpperCase()} / ${data.past.toUpperCase()} : ${data.translation.toUpperCase()}</p>`;
+          }
+        });
+        revisionList.appendChild(section);
+      }
+      showScreen("revision-screen");
+    }
+
+    /***** Gestion des événements sur les boutons *****/
+    document.getElementById("classic-btn").addEventListener("click", startClassicGame);
+    document.getElementById("chrono-btn").addEventListener("click", startChronoGame);
+    document.getElementById("theme-btn").addEventListener("click", startThemeSelection);
+    document.getElementById("revise-btn").addEventListener("click", startRevision);
+    document.getElementById("game-home-btn").addEventListener("click", goHome);
+    document.getElementById("theme-home-btn").addEventListener("click", goHome);
+    document.getElementById("revise-home-btn").addEventListener("click", goHome);
+    document.getElementById("timeup-home-btn").addEventListener("click", goHome);
+    document.querySelectorAll("button.theme-btn").forEach(btn => {
+      btn.addEventListener("click", function() {
+        const themeKey = this.getAttribute("data-theme");
+        if (themeKey) startThemeGame(themeKey);
+      });
+    });
+
+    showScreen("home-screen");
   </script>
 </body>
 </html>
