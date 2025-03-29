@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Règles du jeu - IRREGULAR WORDLE</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: url('https://wallpapers.com/images/hd/light-wood-background-v9gsvgo48dhdtn6x.jpg') no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .content {
+      background: rgba(255,255,255,0.9);
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
+    .content p {
+      margin: 15px 0;
+      line-height: 1.5;
+    }
+    .highlight-green {
+      background-color: Chartreuse;
+      padding: 2px 4px;
+    }
+    .highlight-yellow {
+      background-color: Khaki;
+      padding: 2px 4px;
+    }
+    .highlight-gray {
+      background-color: LightGray;
+      padding: 2px 4px;
+    }
+    .bold {
+      font-weight: bold;
+    }
+    button {
+      background-color: lightblue;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 6px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <h1>Règles du jeu</h1>
+    <p>
+      Bienvenue sur "Irregular Wordle" !<br>
+      Dans ce jeu, inspiré par le jeu <span class="highlight-green bold">WORDLE</span>, créé par le <span class="bold">New York Times</span>, le but est de réviser les verbes irréguliers de façon amusante et originale.
+    </p>
+    <p>
+      Vous avez <span class="bold">5 essais</span> pour découvrir le <span class="bold">PRETERIT</span> mystère.
+    </p>
+    <p>
+      Une <span class="highlight-green bold">lettre bien placée</span> sera affichée en vert.<br>
+      Une <span class="highlight-yellow bold">lettre présente</span>, mais mal placée, sera affichée en jaune.<br>
+      Une <span class="highlight-gray bold">lettre absente</span> sera affichée en gris.
+    </p>
+    <p>
+      Arriverez-vous à trouver le Prétérit mystère en moins de 5 tentatives ?
+    </p>
+    <button onclick="location.href='index.html'">Accueil</button>
+  </div>
+</body>
+</html>
