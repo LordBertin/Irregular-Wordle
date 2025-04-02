@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mode Chronométré</title>
+  <style>
+    /* Conteneur principal centré et responsive */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      background: url('https://wallpapers.com/images/hd/light-wood-background-v9gsvgo48dhdtn6x.jpg') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    p.subtitle {
+      margin: 0 0 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    /* Zone regroupant les compteurs et le chronomètre */
+    .stats-container {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      flex: 1 1 30%;
+      margin: 5px;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .pink { background-color: #ffb6c1; }
+    .yellow { background-color: #ffffe0; }
+    .red { background-color: #ffcccb; }
+    /* Augmentation de la taille du chronomètre */
+    #timer {
+      font-size: 28px;
+    }
+    /* Zone d'affichage des réponses validées */
+    #foundWords {
+      margin: 10px auto;
+      font-size: 20px;
+      min-height: 30px;
+      width: 100%;
+      background: #e7ffe7;
+      border: 2px solid green;
+      padding: 5px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    /* Champ de saisie pour le clavier physique */
+    #text-input {
+      font-size: 22px;
+      padding: 5px;
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    /* Clavier virtuel (apparence d'origine) */
+    #virtual-keyboard {
+      width: 100%;
+      max-width: 500px;
+      background-color: rgba(255,255,255,0.8);
+      padding: 10px;
+      border-radius: 8px;
+      margin: 10px auto;
+      text-align: center;
+    }
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      margin-bottom: 5px;
+    }
+    .key {
+      flex: 1;
+      padding: 10px 5px;
+      background-color: #ddd;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    .key:hover { background-color: #ccc; }
+    .key:active { transform: scale(0.95); }
+    .key.enter {
+      background-color: green !important;
+      color: white;
+    }
+    .key.delete {
+      background-color: red !important;
+      color: white;
+    }
+    /* Bouton Accueil */
+    #home-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    /* Animation de secousse pour le clavier en cas de mauvaise réponse */
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-5px); }
+      40% { transform: translateX(5px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+      100% { transform: translateX(0); }
+    }
+    .shake {
+      animation: shake 0.5s;
+    }
+    /* Modal TIME'S UP */
+    #modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      max-width: 90%;
+    }
+    #modal-content img {
+      width: 85px;
+      margin: 10px auto;
+      display: block;
+    }
+    #modal-content button {
+      margin-top: 15px;
+      padding: 8px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Mode Chronométré</h1>
+    <p class="subtitle">Combien de PRETERIT sauras-tu retrouver en 3 minutes ?</p>
+    <!-- Zone regroupant les compteurs et le chronomètre -->
+    <div class="stats-container">
+      <div class="stat-box pink">Preterit restants : <span id="remaining">80</span></div>
+      <div class="stat-box yellow">Preterit corrects : <span id="correct">0</span></div>
+      <div class="stat-box red">⏳ <span id="timer">03:00</span></div>
+    </div>
+    <!-- Zone d'affichage des réponses validées -->
+    <div id="foundWords"></div>
+    <!-- Champ de saisie pour le clavier physique -->    
+    <input type="text" id="text-input" placeholder="Tape ton Preterit ici...">
+    <!-- Clavier virtuel (toujours affiché) -->
+    <div id="virtual-keyboard"></div>
+    <!-- Bouton Accueil -->
+    <button id="home-btn" onclick="window.location.href='index.html'">Accueil</button>
+  </div>
+  <!-- Modal TIME'S UP -->
+  <div id="modal">
+    <div id="modal-content">
+      <h2>TIME'S UP</h2>
+      <p>Preterit corrects : <span id="final-correct"></span> | Preterit restants : <span id="final-remaining"></span></p>
+      <img src="time.png" alt="Time's Up">
+      <button onclick="closeModal()">Retour à l'accueil</button>
+    </div>
+  </div>
+  <script>
+    /***** Données de conjugaison et préparation de la liste des Preterit *****/
+    const verbData = {
+      "be":      { preterit: "was / were" },
+      "have":    { preterit: "had" },
+      "do":      { preterit: "did" },
+      "make":    { preterit: "made" },
+      "go":      { preterit: "went" },
+      "get":     { preterit: "got" },
+      "beat":    { preterit: "beat" },
+      "become":  { preterit: "became" },
+      "begin":   { preterit: "began" },
+      "bet":     { preterit: "bet" },
+      "bite":    { preterit: "bit" },
+      "bleed":   { preterit: "bled" },
+      "break":   { preterit: "broke" },
+      "bring":   { preterit: "brought" },
+      "build":   { preterit: "built" },
+      "burn":    { preterit: "burnt" },
+      "buy":     { preterit: "bought" },
+      "cast":    { preterit: "cast" },
+      "catch":   { preterit: "caught" },
+      "choose":  { preterit: "chose" },
+      "come":    { preterit: "came" },
+      "cost":    { preterit: "cost" },
+      "cut":     { preterit: "cut" },
+      "draw":    { preterit: "drew" },
+      "dream":   { preterit: "dreamt" },
+      "drink":   { preterit: "drank" },
+      "drive":   { preterit: "drove" },
+      "eat":     { preterit: "ate" },
+      "fall":    { preterit: "fell" },
+      "feed":    { preterit: "fed" },
+      "feel":    { preterit: "felt" },
+      "fight":   { preterit: "fought" },
+      "find":    { preterit: "found" },
+      "fly":     { preterit: "flew" },
+      "forbid":  { preterit: "forbade" },
+      "forget":  { preterit: "forgot" },
+      "forgive": { preterit: "forgave" },
+      "hang":    { preterit: "hung" },
+      "hear":    { preterit: "heard" },
+      "hide":    { preterit: "hid" },
+      "hit":     { preterit: "hit" },
+      "hold":    { preterit: "held" },
+      "hurt":    { preterit: "hurt" },
+      "keep":    { preterit: "kept" },
+      "know":    { preterit: "knew" },
+      "learn":   { preterit: "learnt" },
+      "leave":   { preterit: "left" },
+      "let":     { preterit: "let" },
+      "lose":    { preterit: "lost" },
+      "overcome":{ preterit: "overcame" },
+      "run":     { preterit: "ran" },
+      "say":     { preterit: "said" },
+      "see":     { preterit: "saw" },
+      "sell":    { preterit: "sold" },
+      "send":    { preterit: "sent" },
+      "shoot":   { preterit: "shot" },
+      "show":    { preterit: "showed" },
+      "shut":    { preterit: "shut" },
+      "sing":    { preterit: "sang" },
+      "sit":     { preterit: "sat" },
+      "sleep":   { preterit: "slept" },
+      "smell":   { preterit: "smelt" },
+      "speak":   { preterit: "spoke" },
+      "spend":   { preterit: "spent" },
+      "steal":   { preterit: "stole" },
+      "swim":    { preterit: "swam" },
+      "take":    { preterit: "took" },
+      "teach":   { preterit: "taught" },
+      "tear":    { preterit: "tore" },
+      "tell":    { preterit: "told" },
+      "think":   { preterit: "thought" },
+      "throw":   { preterit: "threw" },
+      "understand": { preterit: "understood" },
+      "wake":    { preterit: "woke" },
+      "win":     { preterit: "won" },
+      "write":   { preterit: "wrote" },
+      "put":     { preterit: "put" }  // Réponse supplémentaire
+    };
+
+    // Construction de l'ensemble des preterit valides
+    const validPreterits = new Set();
+    for (const key in verbData) {
+      if (verbData.hasOwnProperty(key)) {
+        let prec = verbData[key].preterit.toLowerCase();
+        // Certains verbes offrent plusieurs réponses séparées par " / "
+        prec.split(" / ").forEach(word => validPreterits.add(word.trim()));
+      }
+    }
+
+    // Variables de jeu
+    let preteritRemaining = 80;
+    let preteritCorrect = 0;
+    const usedPreterits = new Set();
+
+    // Références aux éléments de l'interface
+    const remainingElem = document.getElementById('remaining');
+    const correctElem = document.getElementById('correct');
+    const timerElem = document.getElementById('timer');
+    const foundWordsElem = document.getElementById('foundWords');
+    const textInput = document.getElementById('text-input');
+    const keyboardContainer = document.getElementById('virtual-keyboard');
+    const modal = document.getElementById('modal');
+    const finalCorrectElem = document.getElementById('final-correct');
+    const finalRemainingElem = document.getElementById('final-remaining');
+
+    let timeLeft = 180; // 3 minutes
+    let timerInterval = null;
+
+    /***** Création du clavier virtuel (apparence d'origine) *****/
+    const keyboardLayout = [
+      ["A", "Z", "E", "R", "T", "Y", "U", "I", "O", "P"],
+      ["Q", "S", "D", "F", "G", "H", "J", "K", "L", "M"],
+      ["Delete", "W", "X", "C", "V", "B", "N", "Enter"]
+    ];
+
+    function createKeyboard() {
+      keyboardContainer.innerHTML = "";
+      keyboardLayout.forEach(row => {
+        const rowDiv = document.createElement('div');
+        rowDiv.classList.add('keyboard-row');
+        row.forEach(key => {
+          const keyButton = document.createElement('button');
+          keyButton.textContent = key;
+          keyButton.classList.add('key');
+          if(key.toUpperCase() === "ENTER") keyButton.classList.add('enter');
+          if(key.toUpperCase() === "DELETE") keyButton.classList.add('delete');
+          keyButton.addEventListener('click', () => handleVirtualKey(key));
+          rowDiv.appendChild(keyButton);
+        });
+        keyboardContainer.appendChild(rowDiv);
+      });
+    }
+
+    /***** Gestion de la saisie *****/
+    // Saisie via le clavier virtuel
+    function handleVirtualKey(key) {
+      if(key === "Enter") {
+        processInput();
+      } else if(key === "Delete") {
+        textInput.value = textInput.value.slice(0, -1);
+      } else {
+        textInput.value += key.toLowerCase();
+      }
+    }
+
+    // Saisie via le clavier physique (sur le champ de saisie)
+    textInput.addEventListener('keydown', function(e) {
+      if(e.key === "Enter") {
+        processInput();
+      }
+    });
+
+    function processInput() {
+      const entry = textInput.value.trim().toLowerCase();
+      if(entry === "") return;
+      if(validPreterits.has(entry) && !usedPreterits.has(entry)) {
+        usedPreterits.add(entry);
+        preteritCorrect++;
+        preteritRemaining--;
+        correctElem.textContent = preteritCorrect;
+        remainingElem.textContent = preteritRemaining;
+        // Affichage en majuscules avec séparateur '-'
+        const separator = foundWordsElem.textContent === '' ? '' : ' - ';
+        foundWordsElem.textContent += separator + entry.toUpperCase();
+        new Audio('good.mp3').play();
+      } else {
+        // Animation de secousse pour indiquer une mauvaise réponse
+        keyboardContainer.classList.add('shake');
+        setTimeout(() => {
+          keyboardContainer.classList.remove('shake');
+        }, 500);
+      }
+      textInput.value = '';
+    }
+
+    /***** Chronomètre *****/
+    function startTimer() {
+      timerElem.textContent = formatTime(timeLeft);
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timerElem.textContent = formatTime(timeLeft);
+        if(timeLeft <= 0) {
+          clearInterval(timerInterval);
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return m.toString().padStart(2, '0') + ':' + s.toString().padStart(2, '0');
+    }
+
+    /***** Fin de partie : affichage de la modale TIME'S UP *****/
+    function endGame() {
+      keyboardContainer.style.display = 'none';
+      textInput.style.display = 'none';
+      finalCorrectElem.textContent = preteritCorrect;
+      finalRemainingElem.textContent = preteritRemaining;
+      modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+      window.location.href = 'index.html';
+    }
+
+    /***** Initialisation *****/
+    createKeyboard();
+    startTimer();
+    // Pour faciliter la saisie, on met le focus sur le champ texte au chargement
+    textInput.focus();
+  </script>
+</body>
+</html>
