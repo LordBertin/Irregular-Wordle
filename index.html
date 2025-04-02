@@ -18,7 +18,66 @@
       text-align: center;
       margin: 10px;
     }
-    /* Bloc d'instructions au-dessus de la grille */
+    /* Nouvelle organisation de l'écran d'accueil en deux colonnes */
+    #home-screen {
+      text-align: center;
+    }
+    .button-columns {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 15px;
+    }
+    .column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    .home-btn-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .round-btn {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: none;
+      background-color: #ddd;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 36px;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    .round-btn:hover {
+      background-color: #ccc;
+    }
+    .round-btn:active {
+      transform: scale(0.95);
+    }
+    .btn-label {
+      margin-top: 5px;
+      font-weight: bold;
+      text-align: center;
+    }
+    /* Bouton "Règles du jeu" - couleur bleu ciel */
+    #rules-btn {
+      background-color: skyblue;
+    }
+    /* Le reste des styles inchangés */
+    button.mode-btn, button.theme-btn, button.home-btn {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 6px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
     #instructions {
       text-align: center;
       margin-bottom: 10px;
@@ -36,14 +95,12 @@
     #instructions .legend.green { background-color: Chartreuse; }
     #instructions .legend.yellow { background-color: Khaki; }
     #instructions .legend.gray { background-color: LightGray; }
-    /* Score et timer centrés */
     #score-box, #timer-box {
       margin-bottom: 10px;
       font-size: 18px;
       font-weight: bold;
       text-align: center;
     }
-    /* Conteneur de la grille centré */
     #board-container {
       position: relative;
       width: 100%;
@@ -76,7 +133,6 @@
       background-color: white;
       transition: background-color 0.3s, transform 0.3s;
     }
-    /* Animation flip */
     .flip {
       animation: flip 0.6s;
     }
@@ -100,7 +156,6 @@
       color: white;
       border: none;
     }
-    /* Clavier virtuel centré */
     #virtual-keyboard {
       width: 100%;
       max-width: 500px;
@@ -129,7 +184,6 @@
     }
     .key:hover { background-color: #ccc; }
     .key:active { transform: scale(0.95); }
-    /* Coloration spécifique pour Enter et Delete */
     .key.enter {
       background-color: green !important;
       color: white;
@@ -138,33 +192,15 @@
       background-color: red !important;
       color: white;
     }
-    /* Boutons généraux centrés */
-    button.mode-btn, button.theme-btn, button.home-btn {
-      padding: 10px 20px;
-      margin: 10px;
-      font-size: 16px;
-      cursor: pointer;
-      border-radius: 6px;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    /* Bouton "Règles du jeu" sur la page d'accueil */
-    #rules-btn {
-      background-color: lightgray;
-    }
-    /* Bouton Accueil sur la page "Verbes par thèmes" coloré en bleu clair */
     #theme-home-btn {
       background-color: lightblue;
     }
-    /* Conteneurs d'écran */
     .screen {
       display: none;
       width: 100%;
       max-width: 600px;
     }
     .visible { display: block; }
-    /* Modal : affichée au premier plan et remontée */
     #verb-info {
       position: fixed;
       top: 40%;
@@ -179,7 +215,6 @@
       text-align: left;
       font-size: 16px;
     }
-    /* Centrage du bouton dans la modale */
     #verb-info button {
       display: block;
       margin: 15px auto 0 auto;
@@ -187,7 +222,6 @@
       font-size: 16px;
       cursor: pointer;
     }
-    /* Révision : centrer les titres de thèmes */
     #revision-list h3 {
       text-align: center;
     }
@@ -196,7 +230,6 @@
       margin-top: 20px;
     }
     footer p { margin: 0 0 5px; font-size: 14px; }
-    /* Adaptation responsive */
     @media (max-width: 600px) {
       .cell {
         max-width: 30px;
@@ -220,19 +253,43 @@
   <div id="home-screen" class="screen visible">
     <h1>IRREGULAR WORDLE</h1>
     <p>Choisissez un mode :</p>
-    <button class="mode-btn" id="classic-btn">Mode Classique</button>
-    <button class="mode-btn" id="chrono-btn">Mode Chronométré</button>
-    <button class="mode-btn" id="theme-btn">Verbes par thèmes</button>
-    <button class="mode-btn" id="revise-btn">Révise les verbes</button>
-    <!-- Nouveau bouton "Règles du jeu" -->
+    <div class="button-columns">
+      <div class="column">
+        <div class="home-btn-container">
+          <button class="round-btn" id="classic-btn">
+            <span class="emoji">✅</span>
+          </button>
+          <div class="btn-label"><strong>Mode Classique</strong></div>
+        </div>
+        <div class="home-btn-container">
+          <button class="round-btn" id="theme-btn">
+            <span class="emoji">📚</span>
+          </button>
+          <div class="btn-label"><strong>Verbes par thèmes</strong></div>
+        </div>
+      </div>
+      <div class="column">
+        <div class="home-btn-container">
+          <button class="round-btn" id="chrono-btn" onclick="location.href='chrono.html'">
+            <span class="emoji">⏳</span>
+          </button>
+          <div class="btn-label"><strong>Challenge</strong></div>
+        </div>
+        <div class="home-btn-container">
+          <button class="round-btn" id="revise-btn">
+            <span class="emoji">📄</span>
+          </button>
+          <div class="btn-label"><strong>Révise les verbes</strong></div>
+        </div>
+      </div>
+    </div>
+    <!-- Bouton "Règles du jeu" en dessous -->
     <button class="mode-btn" id="rules-btn" onclick="location.href='regles.html'">Règles du jeu</button>
   </div>
 
-  <!-- Écran de jeu (utilisé pour Mode Classique, Chrono et Thèmes) -->
+  <!-- Les autres écrans restent inchangés -->
   <div id="game-screen" class="screen">
-    <!-- En mode thème, le titre inclura le nom du thème -->
     <h2 id="game-title"></h2>
-    <!-- Bloc d'instructions -->
     <div id="instructions">
       <p style="font-size: 16px;">Tu n'as que 5 essais, alors réfléchis bien</p>
       <div>
@@ -242,7 +299,6 @@
       </div>
     </div>
     <div id="score-box">Meilleur série : 0 | Série actuelle : 0</div>
-    <!-- Le timer ne s'affiche qu'en mode Chronométré -->
     <div id="timer-box">Temps restant : 05:00</div>
     <div id="board-container">
       <div id="board"></div>
@@ -253,11 +309,9 @@
       <div class="keyboard-row" id="row3"></div>
     </div>
     <div id="message"></div>
-    <!-- Bouton Accueil centré sous le clavier -->
     <button class="home-btn" id="game-home-btn">Accueil</button>
   </div>
 
-  <!-- Écran de sélection des thèmes -->
   <div id="theme-screen" class="screen">
     <h2>Choisissez un thème</h2>
     <button class="theme-btn" data-theme="indispensables">Verbes Indispensables</button>
@@ -271,21 +325,16 @@
     <button class="theme-btn" data-theme="iau">Les I / A / U</button>
     <button class="theme-btn" data-theme="ear_ore_orn">Les EAR / ORE / ORN</button>
     <button class="theme-btn" data-theme="ew">Les Preterits en EW</button>
-    <!-- Bouton Accueil coloré en bleu clair -->
     <button class="home-btn" id="theme-home-btn" style="background-color: lightblue;">Accueil</button>
   </div>
 
-  <!-- Écran de révision (affiche la liste des verbes par catégories) -->
   <div id="revision-screen" class="screen">
     <h2>Révision des verbes irréguliers</h2>
     <div id="revision-list" style="max-height:400px; overflow-y:auto; background:rgba(255,255,255,0.9); padding:10px; border-radius:8px;">
-      <!-- Le contenu sera généré dynamiquement -->
     </div>
-    <!-- Bouton Accueil -->
     <button class="home-btn" id="revise-home-btn">Accueil</button>
   </div>
 
-  <!-- Écran Time's Up pour le mode Chronométré -->
   <div id="timeup-screen" class="screen">
     <h2>Time's Up !</h2>
     <p id="timeup-score"></p>
@@ -300,7 +349,9 @@
   <script>
     /***** Données de conjugaison *****/
     const verbData = {
-      "be":      { base: "be",    preterit: "was / were", past: "been",    translation: "être" },
+      // Le verbe "be" est maintenant séparé en deux entrées distinctes :
+      "was": { base: "be", preterit: "was", past: "been", translation: "être" },
+      "were": { base: "be", preterit: "were", past: "been", translation: "être" },
       "have":    { base: "have",  preterit: "had",      past: "had",     translation: "avoir" },
       "do":      { base: "do",    preterit: "did",      past: "done",    translation: "faire" },
       "make":    { base: "make",  preterit: "made",     past: "made",    translation: "fabriquer" },
@@ -376,20 +427,19 @@
       "wake":      { base: "wake",    preterit: "woke",    past: "woken",     translation: "se réveiller" },
       "win":       { base: "win",     preterit: "won",     past: "won",       translation: "gagner" },
       "write":     { base: "write",   preterit: "wrote",   past: "written",   translation: "écrire" },
-      /* Ajouts pour le thème EAR / ORE / ORN */
-      "bear":     { base: "bear",    preterit: "bore",    past: "born",    translation: "supporter" },
       "swear":    { base: "swear",   preterit: "swore",   past: "sworn",   translation: "jurer" },
       "wear":     { base: "wear",    preterit: "wore",    past: "worn",    translation: "porter (habits)" }
     };
 
     /***** Listes de verbes pour chaque mode *****/
+    // Mise à jour du tableau pour remplacer "be" par "was" et "were"
     const classicVerbs = [
-      "be", "have", "do", "make", "go", "get",
+      "was", "were", "have", "do", "make", "go", "get",
       "beat", "become", "begin", "bet", "bite", "bleed", "break", "bring", "build", "burn", "buy", "cast", "catch", "choose", "come", "cost", "cut", "draw", "dream", "drink", "drive", "eat", "fall", "feed", "feel", "fight", "find", "fly", "forbid", "forget", "forgive", "hang", "hear", "hide", "hit", "hold", "hurt", "keep", "know", "learn", "leave", "let", "lose", "overcome", "run", "say", "see", "sell", "send", "shoot", "show", "shut", "sing", "sit", "sleep", "smell", "speak", "spend", "steal", "swim", "take", "teach", "tear", "tell", "think", "throw", "understand", "wake", "win", "write"
     ];
 
     const themes = {
-      indispensables: ["be", "have", "do", "make", "go", "get"],
+      indispensables: ["was", "were", "have", "do", "make", "go", "get"],
       inchanges: ["cut", "bet", "let", "hurt", "put", "shut", "burst", "hit", "cost", "spread", "read", "quit"],
       t: ["burn", "build", "send", "spend", "learn", "lend", "shoot", "lose", "sit"],
       preterit_past: ["find", "hear", "lay", "pay", "say", "sell", "tell", "stand", "understand", "win", "mean", "dream"],
@@ -430,13 +480,11 @@
       ["Delete", "W", "X", "C", "V", "B", "N", "Enter"]
     ];
 
-    /***** Fonctions d'affichage des écrans *****/
     function showScreen(screenId) {
       document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('visible'));
       document.getElementById(screenId).classList.add('visible');
     }
 
-    /***** Initialisation et création du jeu *****/
     function chooseSolution() {
       const randIndex = Math.floor(Math.random() * currentVerbs.length);
       currentChosenVerb = currentVerbs[randIndex];
@@ -478,7 +526,6 @@
       console.log("Mot à trouver (Prétérit) :", solutionWord);
     }
 
-    /***** Chronomètre pour le mode Chronométré *****/
     function startTimer() {
       remainingTime = 300;
       timerBox.textContent = "Temps restant : " + formatTime(remainingTime);
@@ -502,13 +549,11 @@
       return m.toString().padStart(2, '0') + ":" + s.toString().padStart(2, '0');
     }
 
-    /***** Écran Time's Up *****/
     function displayTimeUp() {
       document.getElementById("timeup-score").textContent = "Score final : " + currentStreak;
       showScreen("timeup-screen");
     }
 
-    /***** Gestion de l'évaluation des propositions *****/
     function evaluateGuess(guess, solution) {
       const result = Array(guess.length).fill("absent");
       const solutionLetterCount = {};
@@ -585,7 +630,6 @@
       }, evaluation.length * 300 + 300);
     }
 
-    /***** Affichage de la modale de fin de manche *****/
     function displayVerbInfo(isWin) {
       const infoContainer = document.createElement("div");
       infoContainer.id = "verb-info";
@@ -626,7 +670,6 @@
       endSound.play();
     }
 
-    /***** Clavier virtuel *****/
     function createKeyboard() {
       ["row1", "row2", "row3"].forEach(rowId => {
         document.getElementById(rowId).innerHTML = "";
@@ -698,7 +741,6 @@
       enableKeyboard();
     }
 
-    /***** Gestion des boutons Accueil *****/
     function goHome() {
       if (currentMode === "chrono") stopTimer();
       const modal = document.getElementById("verb-info");
@@ -706,7 +748,6 @@
       showScreen("home-screen");
     }
 
-    /***** Gestion des différents modes *****/
     function startClassicGame() {
       currentMode = "classic";
       document.getElementById("game-title").textContent = "Mode Classique";
@@ -790,7 +831,6 @@
       showScreen("revision-screen");
     }
 
-    /***** Gestion des événements sur les boutons *****/
     document.getElementById("classic-btn").addEventListener("click", startClassicGame);
     document.getElementById("chrono-btn").addEventListener("click", startChronoGame);
     document.getElementById("theme-btn").addEventListener("click", startThemeSelection);
